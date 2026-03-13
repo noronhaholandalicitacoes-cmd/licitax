@@ -1,0 +1,3167 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LicitaX — Automação de Licitações</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<style>
+:root{--bg:#0a0c10;--surf:#111318;--surf2:#181c24;--bord:#1e2330;--bord2:#252b3b;--acc:#2563eb;--acc2:#3b82f6;--glow:rgba(37,99,235,.3);--grn:#10b981;--grn2:rgba(16,185,129,.12);--red:#ef4444;--red2:rgba(239,68,68,.12);--amb:#f59e0b;--amb2:rgba(245,158,11,.12);--txt:#e8eaf0;--txt2:#8892a4;--txt3:#4a5568;--r:10px;--rl:16px}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 50% at 20% 10%,rgba(37,99,235,.05) 0%,transparent 60%),radial-gradient(ellipse 60% 40% at 80% 80%,rgba(16,185,129,.03) 0%,transparent 50%);pointer-events:none;z-index:0}
+
+/* SIDEBAR */
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:232px;background:var(--surf);border-right:1px solid var(--bord);display:flex;flex-direction:column;z-index:100}
+.logo-area{padding:22px 18px 18px;border-bottom:1px solid var(--bord)}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-icon{width:34px;height:34px;background:linear-gradient(135deg,var(--acc),#1d4ed8);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;box-shadow:0 0 18px var(--glow)}
+.logo-text{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;letter-spacing:-.5px}
+.logo-text span{color:var(--acc2)}
+.logo-sub{font-size:10px;color:var(--txt3);letter-spacing:1.5px;text-transform:uppercase;margin-top:1px}
+.nav{flex:1;padding:14px 10px;display:flex;flex-direction:column;gap:2px;overflow-y:auto}
+.nav-section{font-size:10px;color:var(--txt3);letter-spacing:1.5px;text-transform:uppercase;padding:8px 8px 4px;margin-top:6px}
+.nav-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;cursor:pointer;color:var(--txt2);font-size:13px;font-weight:400;transition:all .15s;position:relative;user-select:none}
+.nav-item:hover{background:var(--surf2);color:var(--txt)}
+.nav-item.active{background:rgba(37,99,235,.15);color:var(--acc2);font-weight:500}
+.nav-item.active::before{content:'';position:absolute;left:0;top:20%;bottom:20%;width:3px;border-radius:0 3px 3px 0;background:var(--acc2)}
+.nav-icon{font-size:14px;width:17px;text-align:center}
+.nav-badge{margin-left:auto;background:var(--red);color:#fff;font-size:10px;font-weight:700;padding:1px 5px;border-radius:10px;line-height:15px}
+.nav-badge.b{background:rgba(37,99,235,.25);color:var(--acc2)}
+.sidebar-footer{padding:14px 10px;border-top:1px solid var(--bord)}
+.user-card{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;cursor:pointer;transition:background .15s}
+.user-card:hover{background:var(--surf2)}
+.avatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#7c3aed,#2563eb);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0}
+.user-info{flex:1;min-width:0}
+.user-name{font-size:12.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.user-role{font-size:10.5px;color:var(--txt3)}
+
+/* MAIN */
+.main{margin-left:232px;min-height:100vh;position:relative;z-index:1}
+.topbar{padding:18px 28px;border-bottom:1px solid var(--bord);display:flex;align-items:center;gap:14px;background:rgba(10,12,16,.85);backdrop-filter:blur(10px);position:sticky;top:0;z-index:50}
+.page-title{font-family:'Syne',sans-serif;font-size:19px;font-weight:700;flex:1}
+.page-title span{color:var(--txt2);font-weight:400;font-size:14px;margin-left:6px}
+.breadcrumb{font-size:11.5px;color:var(--txt3);margin-bottom:2px;display:flex;align-items:center;gap:5px}
+.breadcrumb a{color:var(--txt2);cursor:pointer}
+.breadcrumb a:hover{color:var(--txt)}
+.tb-actions{display:flex;align-items:center;gap:7px}
+.content{padding:24px 28px}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;border:none;transition:all .15s;font-family:inherit;white-space:nowrap;text-decoration:none}
+.btn-primary{background:var(--acc);color:#fff;box-shadow:0 0 14px rgba(37,99,235,.3)}
+.btn-primary:hover{background:var(--acc2);box-shadow:0 0 22px rgba(37,99,235,.4)}
+.btn-ghost{background:transparent;color:var(--txt2);border:1px solid var(--bord2)}
+.btn-ghost:hover{background:var(--surf2);color:var(--txt)}
+.btn-danger{background:rgba(239,68,68,.15);color:var(--red);border:1px solid rgba(239,68,68,.25)}
+.btn-danger:hover{background:rgba(239,68,68,.25)}
+.btn-sm{padding:5px 11px;font-size:12px}
+.btn-icon{width:34px;height:34px;padding:0;display:flex;align-items:center;justify-content:center;border-radius:8px;background:var(--surf2);color:var(--txt2);border:1px solid var(--bord);cursor:pointer;font-size:15px;transition:all .15s;font-family:inherit}
+.btn-icon:hover{color:var(--txt);background:var(--bord2)}
+
+/* FORMS */
+.input{background:var(--surf2);border:1px solid var(--bord2);border-radius:8px;padding:8px 11px;font-size:13px;color:var(--txt);font-family:inherit;outline:none;width:100%;transition:border-color .15s}
+.input:focus{border-color:var(--acc)}
+.input::placeholder{color:var(--txt3)}
+select.input{cursor:pointer}
+.form-row{display:grid;gap:14px}
+.form-row.cols2{grid-template-columns:1fr 1fr}
+.form-row.cols3{grid-template-columns:1fr 1fr 1fr}
+.field{display:flex;flex-direction:column;gap:5px}
+.field label{font-size:11.5px;color:var(--txt3);text-transform:uppercase;letter-spacing:.7px}
+.search-wrap{position:relative}
+.search-wrap .input{padding-left:34px}
+.search-wrap .si{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--txt3);font-size:13px;pointer-events:none}
+
+/* CARDS */
+.card{background:var(--surf);border:1px solid var(--bord);border-radius:var(--rl);overflow:hidden}
+.card-header{padding:16px 18px;border-bottom:1px solid var(--bord);display:flex;align-items:center;gap:10px}
+.card-body{padding:16px 18px}
+.card-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;flex:1}
+
+/* STATS */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
+.stat-card{background:var(--surf);border:1px solid var(--bord);border-radius:var(--rl);padding:18px;position:relative;overflow:hidden}
+.stat-card::after{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.stat-card.blue::after{background:linear-gradient(90deg,var(--acc),transparent)}
+.stat-card.green::after{background:linear-gradient(90deg,var(--grn),transparent)}
+.stat-card.gold::after{background:linear-gradient(90deg,var(--amb),transparent)}
+.stat-card.purple::after{background:linear-gradient(90deg,#8b5cf6,transparent)}
+.stat-label{font-size:11px;color:var(--txt3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:8px}
+.stat-value{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;line-height:1;margin-bottom:5px}
+.stat-icon{position:absolute;top:16px;right:16px;font-size:22px;opacity:.1}
+
+/* TABLE */
+.table-wrap{background:var(--surf);border:1px solid var(--bord);border-radius:var(--rl);overflow:hidden}
+table{width:100%;border-collapse:collapse}
+thead th{padding:11px 14px;text-align:left;font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.7px;color:var(--txt3);background:rgba(255,255,255,.02);border-bottom:1px solid var(--bord)}
+tbody tr{border-bottom:1px solid var(--bord);transition:background .12s}
+tbody tr:last-child{border-bottom:none}
+tbody tr.clickable{cursor:pointer}
+tbody tr.clickable:hover{background:rgba(255,255,255,.02)}
+tbody td{padding:13px 14px;font-size:13px;vertical-align:middle}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:500}
+.bdot{width:5px;height:5px;border-radius:50%}
+.bg{background:var(--grn2);color:var(--grn)}.bg .bdot{background:var(--grn)}
+.ba{background:var(--amb2);color:var(--amb)}.ba .bdot{background:var(--amb)}
+.bb{background:rgba(37,99,235,.15);color:var(--acc2)}.bb .bdot{background:var(--acc2)}
+.br{background:var(--red2);color:var(--red)}.br .bdot{background:var(--red)}
+.bgr{background:rgba(255,255,255,.06);color:var(--txt2)}.bgr .bdot{background:var(--txt2)}
+.bpu{background:rgba(139,92,246,.15);color:#a78bfa}
+
+/* TABS */
+.tabs{display:flex;gap:2px;background:var(--surf2);padding:4px;border-radius:9px;margin-bottom:18px;width:fit-content}
+.tab{padding:6px 14px;border-radius:7px;font-size:12.5px;font-weight:500;cursor:pointer;color:var(--txt2);transition:all .15s;user-select:none}
+.tab.active{background:var(--surf);color:var(--txt);box-shadow:0 1px 4px rgba(0,0,0,.3)}
+.tab:hover:not(.active){color:var(--txt)}
+
+/* TWO COL */
+.two-col{display:grid;grid-template-columns:1fr 320px;gap:18px}
+.side-panel{display:flex;flex-direction:column;gap:14px}
+.mini-card{background:var(--surf);border:1px solid var(--bord);border-radius:var(--rl);padding:14px 16px}
+.mini-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--txt3);margin-bottom:10px}
+
+/* PROGRESS */
+.prog-wrap{margin-bottom:6px}
+.prog-label{display:flex;justify-content:space-between;font-size:11.5px;color:var(--txt2);margin-bottom:4px}
+.prog-bar{height:6px;background:var(--surf2);border-radius:3px;overflow:hidden}
+.prog-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--acc),var(--grn));transition:width .5s}
+
+/* ALERTS */
+.alert-list{display:flex;flex-direction:column;gap:7px}
+.al-item{display:flex;gap:9px;padding:9px 11px;border-radius:8px;font-size:12px}
+.al-item.crit{background:var(--red2);border:1px solid rgba(239,68,68,.2)}
+.al-item.high{background:var(--amb2);border:1px solid rgba(245,158,11,.2)}
+.al-item.med{background:rgba(37,99,235,.08);border:1px solid rgba(37,99,235,.15)}
+.al-icon{font-size:13px;flex-shrink:0;margin-top:1px}
+.al-text strong{display:block;font-weight:600;margin-bottom:1px}
+
+/* CHECKLIST */
+.ck-list{display:flex;flex-direction:column;gap:5px}
+.ck-item{display:flex;align-items:center;gap:9px;padding:7px 9px;border-radius:7px;cursor:pointer;transition:background .12s;font-size:13px}
+.ck-item:hover{background:var(--surf2)}
+.ck-box{width:17px;height:17px;border-radius:5px;border:1.5px solid var(--bord2);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;transition:all .15s}
+.ck-item.done .ck-box{background:var(--grn);border-color:var(--grn);color:#fff}
+.ck-item.done .ck-label{color:var(--txt2);text-decoration:line-through}
+.ck-label{flex:1;line-height:1.4}
+
+/* PULSE */
+@keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}
+.pulse-row{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--acc2)}
+.pd{width:7px;height:7px;border-radius:50%;background:var(--acc2);animation:pulse 1.2s infinite}
+.pd:nth-child(2){animation-delay:.2s}
+.pd:nth-child(3){animation-delay:.4s}
+
+/* MODALITY */
+.modality{font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:4px;background:rgba(37,99,235,.15);color:var(--acc2);text-transform:uppercase;letter-spacing:.4px}
+
+/* UPLOAD ZONE */
+.upload-zone{border:2px dashed var(--bord2);border-radius:var(--rl);padding:28px 18px;text-align:center;cursor:pointer;transition:all .2s}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--acc);background:rgba(37,99,235,.04)}
+.upload-icon{font-size:28px;margin-bottom:10px;opacity:.5}
+.upload-title{font-size:13.5px;font-weight:600;margin-bottom:3px}
+.upload-sub{font-size:11.5px;color:var(--txt3)}
+
+/* PAGES */
+.page{display:none}
+.page.active{display:block;animation:fadeIn .2s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* COMPANY CARDS */
+.company-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.company-card{background:var(--surf);border:1px solid var(--bord);border-radius:var(--rl);padding:18px;cursor:pointer;transition:all .15s}
+.company-card:hover{border-color:var(--bord2);transform:translateY(-1px)}
+.company-logo{width:44px;height:44px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:12px}
+.company-name{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;margin-bottom:3px}
+.company-cnpj{font-size:11.5px;color:var(--txt3);font-family:monospace;margin-bottom:10px}
+.add-card{background:var(--surf);border:2px dashed var(--bord2);border-radius:var(--rl);padding:18px;cursor:pointer;transition:all .15s;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:160px;gap:6px;color:var(--txt3)}
+.add-card:hover{border-color:var(--acc);color:var(--txt2);background:rgba(37,99,235,.03)}
+
+/* APTITUDE */
+.apt-row{display:grid;grid-template-columns:repeat(5,1fr);gap:9px;margin-bottom:4px}
+.apt-item{padding:11px;border-radius:8px;text-align:center;border:1px solid}
+.apt-item.ok{background:var(--grn2);border-color:rgba(16,185,129,.2)}
+.apt-item.warn{background:var(--amb2);border-color:rgba(245,158,11,.2)}
+.apt-item.fail{background:var(--red2);border-color:rgba(239,68,68,.2)}
+.apt-icon{font-size:16px;margin-bottom:3px}
+.apt-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px}
+.apt-status{font-size:9.5px;margin-top:2px}
+.apt-item.ok .apt-status{color:var(--grn)}
+.apt-item.warn .apt-status{color:var(--amb)}
+.apt-item.fail .apt-status{color:var(--red)}
+
+/* PROPOSAL PREVIEW */
+.proposal-wrap{background:#fff;color:#1a1a1a;border-radius:var(--rl);overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+
+/* REQ ITEM */
+.req-item{background:var(--surf);border:1px solid var(--bord);border-radius:var(--r);overflow:hidden;margin-bottom:9px}
+.req-header{display:flex;align-items:stretch;cursor:pointer;user-select:none}
+.req-bar{width:4px;flex-shrink:0}
+.req-inner{padding:13px 14px;flex:1;display:flex;align-items:center;gap:11px}
+.req-chevron{color:var(--txt3);font-size:12px;flex-shrink:0;transition:transform .2s}
+.req-detail{display:none;padding:12px 14px 13px 32px;border-top:1px solid var(--bord);font-size:12.5px}
+.req-detail.open{display:block}
+
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:var(--surf);border:1px solid var(--bord2);border-radius:var(--rl);width:520px;max-width:96vw;max-height:90vh;overflow-y:auto;animation:fadeIn .2s ease}
+.modal-header{padding:18px 22px;border-bottom:1px solid var(--bord);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--surf);z-index:1}
+.modal-title{font-family:'Syne',sans-serif;font-size:14.5px;font-weight:700}
+.modal-body{padding:20px 22px;display:flex;flex-direction:column;gap:14px}
+.modal-footer{padding:14px 22px;border-top:1px solid var(--bord);display:flex;justify-content:flex-end;gap:8px;position:sticky;bottom:0;background:var(--surf)}
+
+/* NOTIFICATION */
+.notif{position:fixed;bottom:24px;right:24px;z-index:2000;display:flex;flex-direction:column;gap:8px}
+.notif-item{padding:12px 16px;border-radius:10px;font-size:13px;font-weight:500;display:flex;align-items:center;gap:9px;animation:slideIn .3s ease;box-shadow:0 8px 32px rgba(0,0,0,.4);max-width:320px}
+.notif-item.success{background:#064e3b;border:1px solid rgba(16,185,129,.3);color:#6ee7b7}
+.notif-item.error{background:#7f1d1d;border:1px solid rgba(239,68,68,.3);color:#fca5a5}
+.notif-item.info{background:#1e3a5f;border:1px solid rgba(37,99,235,.3);color:#93c5fd}
+@keyframes slideIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--bord2);border-radius:3px}
+
+/* divider */
+.divider{height:1px;background:var(--bord);margin:16px 0}
+
+/* chips */
+.chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}
+.chip{padding:3px 9px;background:var(--surf2);border:1px solid var(--bord2);border-radius:20px;font-size:11.5px;color:var(--txt2)}
+
+/* section header */
+.sh{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.sh-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;flex:1}
+
+/* AI card */
+.ai-banner{background:linear-gradient(135deg,rgba(37,99,235,.08),rgba(16,185,129,.05));border:1px solid rgba(37,99,235,.2);border-radius:var(--rl);padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;gap:14px}
+
+/* AI CHAT */
+.ai-chat-wrap{display:flex;flex-direction:column;height:calc(100vh - 130px);max-width:860px}
+.ai-chat-messages{flex:1;overflow-y:auto;padding:0 0 16px;display:flex;flex-direction:column;gap:14px}
+.ai-msg{display:flex;gap:10px;align-items:flex-start}
+.ai-msg.user{flex-direction:row-reverse}
+.ai-bubble{max-width:82%;padding:11px 15px;border-radius:12px;font-size:13.5px;line-height:1.65}
+.ai-msg.user .ai-bubble{background:var(--acc);color:#fff;border-bottom-right-radius:3px}
+.ai-msg.bot .ai-bubble{background:var(--surf2);border:1px solid var(--bord2);border-bottom-left-radius:3px;color:var(--txt)}
+.ai-bubble ul{margin-left:18px;margin-top:6px}
+.ai-bubble li{margin-bottom:3px}
+.ai-bubble strong{color:var(--acc2)}
+.ai-avatar{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;margin-top:2px}
+.ai-avatar.bot{background:linear-gradient(135deg,var(--acc),#1d4ed8)}
+.ai-avatar.user{background:linear-gradient(135deg,#7c3aed,#2563eb)}
+.ai-input-row{display:flex;gap:9px;align-items:flex-end;padding-top:12px;border-top:1px solid var(--bord)}
+.ai-textarea{flex:1;background:var(--surf2);border:1px solid var(--bord2);border-radius:10px;padding:10px 13px;font-size:13.5px;color:var(--txt);font-family:inherit;outline:none;resize:none;min-height:44px;max-height:130px;transition:border-color .15s;line-height:1.5}
+.ai-textarea:focus{border-color:var(--acc)}
+.ai-textarea::placeholder{color:var(--txt3)}
+.ai-send-btn{width:42px;height:42px;border-radius:10px;background:var(--acc);color:#fff;border:none;cursor:pointer;font-size:17px;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
+.ai-send-btn:hover{background:var(--acc2);box-shadow:0 0 18px var(--glow)}
+.ai-send-btn:disabled{opacity:.4;cursor:not-allowed}
+.ai-quick-btns{display:flex;gap:7px;flex-wrap:wrap;padding-bottom:10px}
+.ai-quick-btn{padding:5px 11px;background:rgba(37,99,235,.1);border:1px solid rgba(37,99,235,.2);border-radius:20px;font-size:12px;color:var(--acc2);cursor:pointer;transition:all .15s}
+.ai-quick-btn:hover{background:rgba(37,99,235,.2)}
+.ai-typing{display:flex;gap:4px;align-items:center;padding:11px 15px}
+.ai-dot{width:7px;height:7px;border-radius:50%;background:var(--txt3);animation:aiDot 1.2s infinite ease-in-out}
+.ai-dot:nth-child(2){animation-delay:.2s}
+.ai-dot:nth-child(3){animation-delay:.4s}
+@keyframes aiDot{0%,80%,100%{transform:scale(1);opacity:.4}40%{transform:scale(1.3);opacity:1}}
+.api-key-input-wrap{position:relative}
+.api-key-input-wrap input{padding-right:90px}
+.api-key-toggle{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:var(--surf);border:1px solid var(--bord2);border-radius:6px;padding:3px 9px;font-size:11px;color:var(--txt2);cursor:pointer;transition:all .15s}
+.api-key-toggle:hover{color:var(--txt)}
+.api-status-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:5px}
+.api-status-dot.ok{background:var(--grn);box-shadow:0 0 6px var(--grn)}
+.api-status-dot.err{background:var(--red);box-shadow:0 0 6px var(--red)}
+.api-status-dot.idle{background:var(--txt3)}
+.config-section{margin-bottom:20px}
+.config-section .card-body{display:flex;flex-direction:column;gap:12px}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;font-size:13.5px;padding:4px 0}
+.toggle-switch{width:38px;height:22px;background:var(--bord2);border-radius:11px;cursor:pointer;position:relative;transition:background .2s;flex-shrink:0}
+.toggle-switch.on{background:var(--acc)}
+.toggle-switch::after{content:'';position:absolute;width:16px;height:16px;border-radius:50%;background:#fff;top:3px;left:3px;transition:left .2s}
+.toggle-switch.on::after{left:19px}
+.pdf-preview-btn{padding:5px 12px;background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.25);border-radius:7px;font-size:12px;color:var(--grn);cursor:pointer;transition:all .15s}
+.pdf-preview-btn:hover{background:rgba(16,185,129,.22)}
+.upload-ai-zone{border:2px dashed var(--bord2);border-radius:12px;padding:24px;text-align:center;cursor:pointer;transition:all .2s;background:var(--surf2);margin-bottom:12px}
+.upload-ai-zone:hover{border-color:var(--acc);background:rgba(37,99,235,.05)}
+.upload-ai-zone.active{border-color:var(--grn);background:rgba(16,185,129,.05)}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="logo-area">
+    <div class="logo">
+      <div class="logo-icon"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M11 2L5 10h5l-2 6 8-9h-5z" fill="white" opacity="0.95"/></svg></div>
+      <div>
+        <div class="logo-text">Licita<span style="color:#60a5fa;text-shadow:0 0 12px rgba(96,165,250,0.6)">X</span></div>
+        <div class="logo-sub">Automação · IA · Propostas</div>
+      </div>
+    </div>
+  </div>
+  <nav class="nav">
+    <div class="nav-section">Principal</div>
+    <div class="nav-item active" data-page="dashboard"><span class="nav-icon">◈</span> Dashboard</div>
+    <div class="nav-item" data-page="empresas"><span class="nav-icon">🏢</span> Minhas Empresas <span class="nav-badge b" id="nb-empresas">2</span></div>
+    <div class="nav-item" data-page="editais"><span class="nav-icon">📋</span> Editais <span class="nav-badge b" id="nb-editais">5</span></div>
+    <div class="nav-section">Documentação</div>
+    <div class="nav-item" data-page="documentos"><span class="nav-icon">🗂️</span> Documentos</div>
+    <div class="nav-item" data-page="propostas"><span class="nav-icon">📄</span> Propostas</div>
+    <div class="nav-section">Ferramentas</div>
+    <div class="nav-item" data-page="ia-assistente"><span class="nav-icon">🤖</span> Assistente IA</div>
+    <div class="nav-item" data-page="alertas"><span class="nav-icon">🔔</span> Alertas <span class="nav-badge" id="nb-alertas">3</span></div>
+    <div class="nav-item" data-page="configuracoes"><span class="nav-icon">⚙️</span> Configurações</div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="avatar">MF</div>
+      <div class="user-info">
+        <div class="user-name">Marcos Ferreira</div>
+        <div class="user-role">Administrador</div>
+      </div>
+      <span style="color:var(--txt3);font-size:14px">⋮</span>
+    </div>
+  </div>
+</aside>
+
+<main class="main">
+
+<!-- ═══════════════════ DASHBOARD ═══════════════════ -->
+<div class="page active" id="page-dashboard">
+  <div class="topbar">
+    <div><div class="breadcrumb">LicitaX › Visão Geral</div><div class="page-title">Dashboard</div></div>
+    <div class="tb-actions">
+      <div class="search-wrap" style="width:210px"><span class="si">🔍</span><input class="input" placeholder="Buscar…" id="dash-search" oninput="dashSearch(this.value)"></div>
+      <button class="btn btn-primary" onclick="showPage('editais');setTimeout(()=>openNewEditalModal(),200)">+ Novo Edital</button>
+    </div>
+  </div>
+  <div class="content">
+    <div class="stats-row">
+      <div class="stat-card blue"><div class="stat-icon">🏢</div><div class="stat-label">Empresas</div><div class="stat-value" style="color:#60a5fa" id="stat-empresas">2</div><div style="font-size:11px;color:var(--grn)">Ativas</div></div>
+      <div class="stat-card green"><div class="stat-icon">📋</div><div class="stat-label">Editais</div><div class="stat-value" style="color:var(--grn)" id="stat-editais">5</div><div style="font-size:11px;color:var(--grn)">Cadastrados</div></div>
+      <div class="stat-card gold"><div class="stat-icon">📄</div><div class="stat-label">Propostas</div><div class="stat-value" style="color:var(--amb)" id="stat-propostas">3</div><div style="font-size:11px;color:var(--grn)">Geradas</div></div>
+      <div class="stat-card purple"><div class="stat-icon">✅</div><div class="stat-label">Taxa Aptidão</div><div class="stat-value" style="color:#a78bfa">78%</div><div style="font-size:11px;color:var(--grn)">↑ +5% vs mês</div></div>
+    </div>
+
+    <div class="ai-banner">
+      <div style="font-size:26px">🤖</div>
+      <div style="flex:1">
+        <div style="font-family:'Syne',sans-serif;font-size:13.5px;font-weight:700;margin-bottom:3px">IA Processando — análise automática ativa</div>
+        <div style="font-size:12.5px;color:var(--txt2)">Novos editais são analisados automaticamente após o upload. Acesse Editais para acompanhar.</div>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="showPage('editais')">Ver Editais →</button>
+    </div>
+
+    <div class="two-col">
+      <div>
+        <div class="sh"><div class="sh-title">Editais Recentes</div><button class="btn btn-ghost btn-sm" onclick="showPage('editais')">Ver todos</button></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Órgão / Edital</th><th>Modalidade</th><th>Abertura</th><th>Status</th><th>Aptidão</th><th></th></tr></thead>
+            <tbody id="dash-editais-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="side-panel">
+        <div class="mini-card">
+          <div class="mini-title">🔔 Alertas Ativos</div>
+          <div class="alert-list" id="dash-alerts-list"></div>
+        </div>
+        <div class="mini-card" id="dash-checklist-card" style="display:none">
+          <div class="mini-title">✅ Checklist Rápido</div>
+          <div id="dash-checklist-content"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ EMPRESAS ═══════════════════ -->
+<div class="page" id="page-empresas">
+  <div class="topbar">
+    <div><div class="breadcrumb">LicitaX › Empresas</div><div class="page-title">Minhas Empresas</div></div>
+    <div class="tb-actions"><button class="btn btn-primary" onclick="openEmpresaModal()">+ Nova Empresa</button></div>
+  </div>
+  <div class="content">
+    <div class="company-grid" id="empresas-grid"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════ EDITAIS ═══════════════════ -->
+<div class="page" id="page-editais">
+  <div class="topbar">
+    <div><div class="breadcrumb">LicitaX › Editais</div><div class="page-title">Editais <span>Processos licitatórios</span></div></div>
+    <div class="tb-actions">
+      <div class="search-wrap" style="width:190px"><span class="si">🔍</span><input class="input" placeholder="Buscar edital…" id="editais-search" oninput="renderEditaisTable()"></div>
+      <button class="btn btn-ghost btn-sm" onclick="filterEditais('all')">Todos</button>
+      <button class="btn btn-primary" onclick="openNewEditalModal()">+ Novo Edital</button>
+    </div>
+  </div>
+  <div class="content">
+    <div class="tabs" id="editais-tabs">
+      <div class="tab active" onclick="filterEditais('all',this)">Todos</div>
+      <div class="tab" onclick="filterEditais('analyzing',this)">Em Análise</div>
+      <div class="tab" onclick="filterEditais('analyzed',this)">Analisados</div>
+      <div class="tab" onclick="filterEditais('pending',this)">Pendentes</div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>#</th><th>Órgão / Edital</th><th>Empresa</th><th>Modalidade</th><th>Abertura</th><th>Encerramento</th><th>Status</th><th>Aptidão</th><th></th></tr></thead>
+        <tbody id="editais-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ EDITAL DETALHE ═══════════════════ -->
+<div class="page" id="page-edital-detail">
+  <div class="topbar">
+    <div>
+      <div class="breadcrumb"><a onclick="showPage('editais')">Editais</a> › <span id="det-breadcrumb">Edital</span></div>
+      <div class="page-title" id="det-title">Detalhe do Edital</div>
+    </div>
+    <div class="tb-actions">
+      <button class="btn btn-ghost btn-sm" onclick="exportExcel()">📊 Excel</button>
+      <button class="btn btn-ghost btn-sm" onclick="gerarDeclaracoes()">📜 Declarações</button>
+      <button class="btn btn-primary btn-sm" onclick="showPage('propostas')">📄 Gerar Proposta</button>
+    </div>
+  </div>
+  <div class="content" id="edital-detail-content"></div>
+</div>
+
+<!-- ═══════════════════ DOCUMENTOS ═══════════════════ -->
+<div class="page" id="page-documentos">
+  <div class="topbar">
+    <div><div class="breadcrumb">LicitaX › Documentos</div><div class="page-title">Repositório de Documentos</div></div>
+    <div class="tb-actions">
+      <select class="input" style="width:155px" id="docs-empresa-select" onchange="renderDocsTable()"></select>
+      <button class="btn btn-ghost btn-sm" onclick="showDocSub('analise')">🤖 Análise IA</button>
+      <button class="btn btn-primary btn-sm" onclick="openDocUploadModal()">+ Upload</button>
+    </div>
+  </div>
+  <div class="content">
+    <div style="display:flex;gap:0;margin-bottom:22px;border-bottom:1px solid var(--bord)">
+      <div id="dsub-repositorio" class="doc-sub active" onclick="showDocSub('repositorio')" style="padding:9px 18px;font-size:13px;font-weight:500;cursor:pointer;border-bottom:2px solid var(--acc2);color:var(--acc2);margin-bottom:-1px;transition:all .15s;user-select:none">🗂️ Repositório</div>
+      <div id="dsub-analise" class="doc-sub" onclick="showDocSub('analise')" style="padding:9px 18px;font-size:13px;font-weight:500;cursor:pointer;border-bottom:2px solid transparent;color:var(--txt2);margin-bottom:-1px;transition:all .15s;user-select:none">🤖 Análise de Conformidade <span style="background:var(--red);color:#fff;font-size:10px;font-weight:700;padding:1px 5px;border-radius:10px;margin-left:5px" id="conf-badge">!</span></div>
+    </div>
+
+    <!-- REPOSITÓRIO -->
+    <div id="subpage-repo">
+      <div class="tabs">
+        <div class="tab active" onclick="filterDocs('all',this)">Todas</div>
+        <div class="tab" onclick="filterDocs('juridica',this)">Jurídica</div>
+        <div class="tab" onclick="filterDocs('fiscal',this)">Fiscal</div>
+        <div class="tab" onclick="filterDocs('trabalhista',this)">Trabalhista</div>
+        <div class="tab" onclick="filterDocs('economica',this)">Econômica</div>
+        <div class="tab" onclick="filterDocs('tecnica',this)">Técnica</div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Documento</th><th>Categoria</th><th>Tipo</th><th>Enviado em</th><th>Validade</th><th>Status</th><th></th></tr></thead>
+          <tbody id="docs-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ANÁLISE CONFORMIDADE -->
+    <div id="subpage-analise" style="display:none">
+      <div class="ai-banner" style="margin-bottom:20px">
+        <div style="font-size:22px">🤖</div>
+        <div style="flex:1">
+          <div style="font-family:'Syne',sans-serif;font-size:13.5px;font-weight:700;margin-bottom:2px">Análise de Conformidade Documental</div>
+          <div style="font-size:12.5px;color:var(--txt2)">Selecione um edital — a IA cruza os requisitos de habilitação com seus documentos e aponta lacunas e vencimentos.</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <select class="input" style="width:220px" id="analise-edital-select"></select>
+          <button class="btn btn-primary btn-sm" onclick="runAnalysis()">✦ Analisar</button>
+        </div>
+      </div>
+      <div id="analise-loading" style="display:none;text-align:center;padding:48px 20px">
+        <div style="font-size:36px;margin-bottom:12px">🤖</div>
+        <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700;margin-bottom:6px">IA Analisando Conformidade…</div>
+        <div class="pulse-row" style="justify-content:center;margin-bottom:20px"><div class="pd"></div><div class="pd"></div><div class="pd"></div></div>
+        <div id="analise-steps" style="font-size:12px;color:var(--txt3);line-height:2.2"></div>
+      </div>
+      <div id="analise-results" style="display:none"></div>
+      <div id="analise-empty" style="text-align:center;padding:48px 20px;color:var(--txt3)">
+        <div style="font-size:40px;margin-bottom:12px;opacity:.4">🔍</div>
+        <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700;margin-bottom:6px;color:var(--txt2)">Selecione um edital para analisar</div>
+        <div style="font-size:12.5px;max-width:380px;margin:0 auto;line-height:1.6">Escolha um edital já analisado e clique em <strong>Analisar</strong> para verificar conformidade.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ PROPOSTAS ═══════════════════ -->
+<div class="page" id="page-propostas">
+  <div class="topbar">
+    <div><div class="breadcrumb">LicitaX › Propostas</div><div class="page-title">Gerador de Proposta Comercial</div></div>
+    <div class="tb-actions">
+      <select class="input" style="width:200px" id="proposta-edital-select" onchange="renderProposal()"></select>
+      <button class="btn btn-ghost btn-sm" onclick="renderProposal()">👁️ Atualizar</button>
+      <button class="btn btn-primary btn-sm" onclick="downloadPropostaPDF()">⬇️ Baixar PDF Real</button>
+    </div>
+  </div>
+  <div class="content">
+    <div class="two-col" style="grid-template-columns:1fr 300px">
+      <div id="proposal-preview"></div>
+      <div class="side-panel">
+        <div class="mini-card">
+          <div class="mini-title">⚙️ Configurações</div>
+          <div style="display:flex;flex-direction:column;gap:11px">
+            <div class="field"><label>Empresa</label><select class="input" id="prop-empresa-sel" onchange="renderProposal()"></select></div>
+            <div class="field"><label>Responsável</label><input class="input" id="prop-responsavel" value="Marcos Ferreira da Silva"></div>
+            <div class="field"><label>Cargo</label><input class="input" id="prop-cargo" value="Diretor Comercial"></div>
+            <div class="field"><label>Validade da Proposta</label><select class="input" id="prop-validade"><option>60 dias</option><option>30 dias</option><option>90 dias</option></select></div>
+          </div>
+        </div>
+        <div class="mini-card">
+          <div class="mini-title">📜 Documentos</div>
+          <div style="display:flex;flex-direction:column;gap:7px">
+            <button class="btn btn-primary" style="width:100%;justify-content:center;font-size:12px" onclick="downloadPropostaPDF()">⬇️ Proposta Comercial (PDF)</button>
+            <button class="btn btn-ghost" style="width:100%;justify-content:center;font-size:12px" onclick="gerarDeclaracao('mepp')">⬇️ Declaração ME/EPP</button>
+            <button class="btn btn-ghost" style="width:100%;justify-content:center;font-size:12px" onclick="gerarDeclaracao('idoneidade')">⬇️ Decl. Idoneidade</button>
+            <button class="btn btn-ghost" style="width:100%;justify-content:center;font-size:12px" onclick="gerarDeclaracao('unificada')">⬇️ Declarações Unificadas</button>
+            <button class="btn btn-ghost" style="width:100%;justify-content:center;font-size:12px" onclick="exportarPropostaExcel()">📊 Exportar Excel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ ALERTAS ═══════════════════ -->
+<div class="page" id="page-alertas">
+  <div class="topbar">
+    <div><div class="breadcrumb">LicitaX › Alertas</div><div class="page-title">Central de Alertas</div></div>
+    <div class="tb-actions"><button class="btn btn-ghost btn-sm" onclick="markAllAlertsRead()">✓ Marcar todos como lidos</button></div>
+  </div>
+  <div class="content" id="alertas-content"></div>
+</div>
+
+<!-- ═══════════════════ ASSISTENTE IA ═══════════════════ -->
+<div class="page" id="page-ia-assistente">
+  <div class="topbar">
+    <div><div class="breadcrumb">LicitaX › Assistente IA</div><div class="page-title">Assistente IA <span>Powered by Claude</span></div></div>
+    <div class="tb-actions">
+      <button class="btn btn-ghost btn-sm" onclick="clearAIChat()">🗑️ Limpar conversa</button>
+      <div id="ai-api-status" style="display:flex;align-items:center;font-size:12px;color:var(--txt3)"><span class="api-status-dot idle" id="ai-status-dot"></span><span id="ai-status-text">Aguardando</span></div>
+    </div>
+  </div>
+  <div class="content" style="height:calc(100vh - 65px);display:flex;flex-direction:column">
+    <div class="ai-quick-btns" id="ai-quick-btns">
+      <span style="font-size:11.5px;color:var(--txt3);align-self:center;margin-right:4px">Perguntas rápidas:</span>
+      <button class="ai-quick-btn" onclick="aiQuick('Analise o edital mais recente e me diga se minha empresa está apta a participar.')">📋 Analisar aptidão</button>
+      <button class="ai-quick-btn" onclick="aiQuick('Quais documentos estão vencidos ou próximos de vencer para a empresa TechClean?')">⚠️ Docs vencidos</button>
+      <button class="ai-quick-btn" onclick="aiQuick('Gere um resumo executivo de todos os editais ativos, com datas e riscos.')">📊 Resumo editais</button>
+      <button class="ai-quick-btn" onclick="aiQuick('Quais cláusulas de risco devo observar em licitações de serviços de limpeza?')">🔍 Cláusulas de risco</button>
+      <button class="ai-quick-btn" onclick="aiQuick('Como calcular o BDI ideal para uma proposta de serviços contínuos?')">💰 Calcular BDI</button>
+    </div>
+    <div class="ai-chat-wrap" style="flex:1">
+      <div class="ai-chat-messages" id="ai-chat-messages">
+        <div class="ai-msg bot">
+          <div class="ai-avatar bot">🤖</div>
+          <div class="ai-bubble">
+            <strong>Olá! Sou o assistente IA do LicitaX.</strong><br><br>
+            Posso te ajudar com:<br>
+            <ul>
+              <li>Análise de editais e verificação de aptidão</li>
+              <li>Revisão de documentos e alertas de vencimento</li>
+              <li>Estratégias de precificação e BDI</li>
+              <li>Dúvidas sobre Lei 14.133/21 e legislação</li>
+              <li>Cole o texto de um edital para análise completa</li>
+            </ul>
+            <br>A IA está configurada e pronta para uso.
+          </div>
+        </div>
+      </div>
+      <div id="ai-upload-context" style="display:none;background:rgba(37,99,235,.08);border:1px solid rgba(37,99,235,.2);border-radius:10px;padding:10px 14px;margin-bottom:10px;font-size:12.5px;display:flex;align-items:center;gap:10px">
+        <span>📎</span><span id="ai-context-label" style="flex:1;color:var(--txt2)">Contexto carregado</span>
+        <button onclick="clearAIContext()" style="background:none;border:none;color:var(--txt3);cursor:pointer;font-size:16px">×</button>
+      </div>
+      <div class="ai-input-row">
+        <div style="flex:1;display:flex;flex-direction:column;gap:8px">
+          <textarea class="ai-textarea" id="ai-input" placeholder="Digite sua pergunta sobre licitações… ou cole o texto de um edital para análise" rows="2"
+            onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAIMessage()}"></textarea>
+          <div style="display:flex;gap:7px;align-items:center">
+            <label style="cursor:pointer;font-size:12px;color:var(--txt3);display:flex;align-items:center;gap:5px;padding:4px 9px;background:var(--surf2);border:1px solid var(--bord2);border-radius:7px;transition:all .15s" 
+              onmouseover="this.style.color='var(--txt)'" onmouseout="this.style.color='var(--txt3)'">
+              <input type="file" accept=".pdf,.txt,.docx" style="display:none" onchange="loadAIFileContext(this)">
+              📎 Anexar edital
+            </label>
+            <span style="font-size:11px;color:var(--txt3)">ou cole o texto diretamente acima · Shift+Enter para nova linha</span>
+          </div>
+        </div>
+        <button class="ai-send-btn" id="ai-send-btn" onclick="sendAIMessage()" title="Enviar (Enter)">➤</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ CONFIGURAÇÕES ═══════════════════ -->
+<div class="page" id="page-configuracoes">
+  <div class="topbar">
+    <div><div class="breadcrumb">LicitaX › Configurações</div><div class="page-title">Configurações</div></div>
+    <div class="tb-actions">
+      <button class="btn btn-primary btn-sm" onclick="saveAllConfig()">💾 Salvar tudo</button>
+    </div>
+  </div>
+  <div class="content">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;max-width:960px">
+
+      <!-- Perfil -->
+      <div class="card config-section">
+        <div class="card-header"><div class="card-title">👤 Perfil do Usuário</div></div>
+        <div class="card-body">
+          <div class="field"><label>Nome completo</label><input class="input" id="cfg-nome" value="Marcos Ferreira da Silva"></div>
+          <div class="field"><label>Email</label><input class="input" id="cfg-email" type="email" value="marcos@empresa.com.br"></div>
+          <div class="field"><label>Cargo / Função</label><input class="input" id="cfg-cargo" value="Diretor Comercial"></div>
+        </div>
+      </div>
+
+      <!-- API Claude -->
+      <div class="card config-section">
+        <div class="card-header"><div class="card-title">🤖 Integração Claude AI</div><span id="cfg-api-badge" class="api-status-dot idle" style="width:10px;height:10px;border-radius:50%"></span></div>
+        <div class="card-body">
+          <div class="field">
+            <label>Chave API Anthropic (Claude)</label>
+            <div class="api-key-input-wrap">
+              <input class="input" id="cfg-api-key" type="password" placeholder="AIza...…" oninput="onApiKeyChange()">
+              <button class="api-key-toggle" onclick="toggleApiKeyVisibility()">👁 Ver</button>
+            </div>
+            <div style="font-size:11.5px;color:var(--txt3);margin-top:4px">Obtenha em <a href="https://console.anthropic.com" target="_blank" style="color:var(--acc2)">console.anthropic.com</a> · A chave é salva só no seu navegador</div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <button class="btn btn-ghost btn-sm" onclick="testApiKey()">🔬 Testar conexão</button>
+            <span id="cfg-api-status-text" style="font-size:12px;color:var(--txt3)">Não testada</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Notificações -->
+      <div class="card config-section">
+        <div class="card-header"><div class="card-title">🔔 Alertas & Notificações</div></div>
+        <div class="card-body">
+          <div class="toggle-row"><span>Prazo crítico (≤ 3 dias)</span><div class="toggle-switch on" id="tog-prazo-crit" onclick="toggleSwitch(this)"></div></div>
+          <div class="toggle-row"><span>Prazo de atenção (≤ 7 dias)</span><div class="toggle-switch on" id="tog-prazo-atenc" onclick="toggleSwitch(this)"></div></div>
+          <div class="toggle-row"><span>Certidão vencida</span><div class="toggle-switch on" id="tog-cert-venc" onclick="toggleSwitch(this)"></div></div>
+          <div class="toggle-row"><span>Certidão vencendo em 30 dias</span><div class="toggle-switch on" id="tog-cert-30" onclick="toggleSwitch(this)"></div></div>
+          <div class="toggle-row"><span>Análise de edital concluída</span><div class="toggle-switch on" id="tog-analise" onclick="toggleSwitch(this)"></div></div>
+          <div class="field"><label>Antecedência padrão de alerta (dias)</label>
+            <input class="input" id="cfg-alert-days" type="number" value="7" min="1" max="30" style="width:100px">
+          </div>
+        </div>
+      </div>
+
+      <!-- Proposta PDF -->
+      <div class="card config-section">
+        <div class="card-header"><div class="card-title">📄 Proposta Comercial (PDF)</div></div>
+        <div class="card-body">
+          <div class="field"><label>Validade padrão da proposta (dias)</label>
+            <input class="input" id="cfg-prop-validade" type="number" value="30" min="1" style="width:100px">
+          </div>
+          <div class="field"><label>Prazo de início padrão</label>
+            <input class="input" id="cfg-prop-prazo" value="10 dias úteis após a Ordem de Serviço">
+          </div>
+          <div class="field"><label>Nome do responsável na proposta</label>
+            <input class="input" id="cfg-prop-resp" value="Marcos Ferreira da Silva">
+          </div>
+          <div class="field"><label>Cargo do responsável</label>
+            <input class="input" id="cfg-prop-cargo" value="Diretor Comercial">
+          </div>
+        </div>
+      </div>
+
+      <!-- Dados/Backup -->
+      <div class="card config-section" style="grid-column:1/-1">
+        <div class="card-header"><div class="card-title">💾 Dados & Backup</div></div>
+        <div class="card-body" style="flex-direction:row;flex-wrap:wrap;gap:10px">
+          <div style="flex:1;min-width:240px">
+            <div style="font-size:13px;margin-bottom:8px;color:var(--txt2)">Todos os dados ficam salvos no navegador (localStorage). Exporte para fazer backup ou mova para outro dispositivo.</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button class="btn btn-ghost btn-sm" onclick="exportData()">📥 Exportar dados (JSON)</button>
+              <label class="btn btn-ghost btn-sm" style="cursor:pointer">📤 Importar dados
+                <input type="file" accept=".json" style="display:none" onchange="importData(this)">
+              </label>
+              <button class="btn btn-danger btn-sm" onclick="confirmClearData()">🗑️ Limpar todos os dados</button>
+            </div>
+          </div>
+          <div style="flex:1;min-width:200px;background:var(--surf2);border-radius:10px;padding:12px;font-size:12.5px">
+            <div style="color:var(--txt3);margin-bottom:6px;font-size:11px;text-transform:uppercase;letter-spacing:.7px">Status do armazenamento</div>
+            <div id="cfg-storage-info" style="color:var(--txt2);line-height:1.8">Calculando…</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sobre -->
+      <div class="card config-section" style="grid-column:1/-1">
+        <div class="card-header"><div class="card-title">ℹ️ Sobre o LicitaX</div></div>
+        <div class="card-body" style="flex-direction:row;gap:20px;align-items:center">
+          <div>
+            <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800">LicitaX <span style="color:var(--acc2)">v2.0</span></div>
+            <div style="font-size:12.5px;color:var(--txt2);margin-top:4px;line-height:1.6">Plataforma de automação de licitações com inteligência artificial.<br>Powered by <strong>Claude (Anthropic)</strong> · Dados salvos localmente no navegador.</div>
+          </div>
+          <div style="margin-left:auto;text-align:right">
+            <div style="font-size:11.5px;color:var(--txt3)">Para hospedar gratuitamente:<br><a href="https://pages.github.com" target="_blank" style="color:var(--acc2)">GitHub Pages</a> · <a href="https://vercel.com" target="_blank" style="color:var(--acc2)">Vercel</a> · <a href="https://netlify.com" target="_blank" style="color:var(--acc2)">Netlify</a></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+</main>
+
+<!-- ═══════════════════ MODALS ═══════════════════ -->
+
+<!-- Modal: Nova/Editar Empresa -->
+<div class="modal-overlay" id="modal-empresa">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-empresa-title">Nova Empresa</div>
+      <button class="btn-icon" onclick="closeModal('modal-empresa')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field"><label>CNPJ</label>
+        <input class="input" id="emp-cnpj" placeholder="00.000.000/0000-00" oninput="formatCNPJ(this)">
+        <div id="cnpj-status" style="font-size:11.5px;margin-top:4px"></div>
+      </div>
+      <div class="form-row cols2">
+        <div class="field"><label>Razão Social</label><input class="input" id="emp-razao" placeholder="Nome completo da empresa"></div>
+        <div class="field"><label>Nome Fantasia</label><input class="input" id="emp-fantasia" placeholder="Nome fantasia"></div>
+      </div>
+      <div class="form-row cols2">
+        <div class="field"><label>Email</label><input class="input" id="emp-email" placeholder="contato@empresa.com.br" type="email"></div>
+        <div class="field"><label>Telefone</label><input class="input" id="emp-telefone" placeholder="(00) 00000-0000"></div>
+      </div>
+      <div class="field"><label>Endereço</label><input class="input" id="emp-endereco" placeholder="Rua, número, bairro, cidade, estado"></div>
+      <div class="field"><label>Website</label><input class="input" id="emp-website" placeholder="www.empresa.com.br"></div>
+
+      <div class="form-row cols2">
+        <div class="field">
+          <label>Logo da Empresa</label>
+          <div id="emp-logo-preview" style="width:64px;height:64px;border-radius:10px;background:var(--surf2);border:2px dashed var(--bord2);display:flex;align-items:center;justify-content:center;font-size:26px;cursor:pointer;margin-bottom:6px;overflow:hidden;transition:border-color .15s" onclick="document.getElementById('emp-logo-file').click()" title="Clique para selecionar">🏢</div>
+          <input type="file" id="emp-logo-file" accept="image/*" style="display:none" onchange="previewLogoUpload(this)">
+          <input type="hidden" id="emp-logo-data" value="">
+          <button class="btn btn-ghost btn-sm" onclick="document.getElementById('emp-logo-file').click()" style="width:64px;font-size:11px">📁 Upload</button>
+        </div>
+        <div class="field">
+          <label>Papel Timbrado</label>
+          <div id="emp-timbrado-preview" style="width:64px;height:64px;border-radius:10px;background:var(--surf2);border:2px dashed var(--bord2);display:flex;align-items:center;justify-content:center;font-size:11px;text-align:center;cursor:pointer;margin-bottom:6px;color:var(--txt3);padding:4px;transition:border-color .15s" onclick="document.getElementById('emp-timbrado-file').click()" title="Clique para selecionar">Sem timbrado</div>
+          <input type="file" id="emp-timbrado-file" accept="image/*,.pdf" style="display:none" onchange="previewTimbradoUpload(this)">
+          <input type="hidden" id="emp-timbrado-data" value="">
+          <input type="hidden" id="emp-timbrado-type" value="">
+          <button class="btn btn-ghost btn-sm" onclick="document.getElementById('emp-timbrado-file').click()" style="width:64px;font-size:11px">📁 Upload</button>
+          <div style="font-size:10.5px;color:var(--txt3);margin-top:4px;line-height:1.4">Imagem ou PDF.<br>Usado na geração<br>de documentos.</div>
+        </div>
+      </div>
+      <input type="hidden" id="emp-edit-id" value="">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-empresa')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveEmpresa()">Salvar Empresa</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Novo Edital -->
+<div class="modal-overlay" id="modal-edital">
+  <div class="modal" style="width:560px">
+    <div class="modal-header">
+      <div class="modal-title">Novo Edital</div>
+      <button class="btn-icon" onclick="closeModal('modal-edital')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label>Empresa participante</label>
+        <select class="input" id="ned-empresa"></select>
+      </div>
+
+      <!-- Chave API sempre visível -->
+      <div id="ned-key-bar" style="background:rgba(37,99,235,.08);border:1px solid rgba(37,99,235,.2);border-radius:var(--r);padding:10px 12px;display:flex;align-items:center;gap:8px;margin-bottom:4px">
+        <span style="font-size:13px">🔑</span>
+        <input id="ned-key-input" type="password" placeholder="Cole sua chave AIza...... aqui"
+          style="flex:1;background:none;border:none;outline:none;color:var(--txt1);font-size:12px;font-family:monospace"
+          oninput="window.LICITAX_KEY=this.value.trim();STATE.apiKey=this.value.trim();this.style.color=this.value.length>20?'var(--grn)':'var(--txt1)'">
+        <span id="ned-key-status" style="font-size:11px;color:var(--txt3)">não salva</span>
+      </div>
+      <div id="ned-upload-zone" class="upload-zone" style="cursor:pointer"
+           ondragover="event.preventDefault();this.classList.add('drag')"
+           ondragleave="this.classList.remove('drag')"
+           ondrop="handleFileDrop(event)"
+           onclick="document.getElementById('ned-file-input').click()">
+        <div class="upload-icon" id="ned-upload-icon">📁</div>
+        <div class="upload-title" id="ned-upload-title">Arraste o edital aqui ou clique para selecionar</div>
+        <div class="upload-sub" id="ned-upload-sub">PDF ou DOCX · Máximo 50 MB · A IA extrai todos os dados automaticamente</div>
+        <input type="file" id="ned-file-input" style="display:none" accept=".pdf,.doc,.docx" onchange="handleFileSelect(this)">
+      </div>
+      <div id="ned-ai-progress" style="display:none">
+        <div style="background:linear-gradient(135deg,rgba(37,99,235,.1),rgba(16,185,129,.06));border:1px solid rgba(37,99,235,.25);border-radius:var(--r);padding:14px 16px">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+            <div style="font-size:20px">🤖</div>
+            <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;flex:1">IA lendo e extraindo dados do edital…</div>
+            <div class="pulse-row"><div class="pd"></div><div class="pd"></div><div class="pd"></div></div>
+          </div>
+          <div id="ned-ai-steps" style="font-size:11.5px;color:var(--txt3);line-height:2.3;padding-left:4px"></div>
+        </div>
+      </div>
+      <div id="ned-extracted">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+          <span style="font-size:13px;font-weight:600;color:var(--txt2)">Dados do Edital</span>
+          <span style="font-size:11.5px;color:var(--txt3)">— preenchido pela IA ou manualmente</span>
+        </div>
+        <div style="background:var(--surf2);border:1px solid var(--bord2);border-radius:var(--r);padding:14px 16px;display:flex;flex-direction:column;gap:12px">
+          <div class="form-row cols2">
+            <div class="field"><label>Órgão Licitante</label><input class="input" id="ned-orgao"></div>
+            <div class="field"><label>Número do Edital</label><input class="input" id="ned-numero"></div>
+          </div>
+          <div class="form-row cols2">
+            <div class="field"><label>Modalidade</label>
+              <select class="input" id="ned-modalidade">
+                <option>Pregão Eletrônico</option><option>Pregão Presencial</option>
+                <option>Concorrência</option><option>Dispensa</option>
+                <option>Inexigibilidade</option><option>RDC</option>
+              </select>
+            </div>
+            <div class="field"><label>Número do Processo</label><input class="input" id="ned-processo"></div>
+          </div>
+          <div class="form-row cols2">
+            <div class="field"><label>Data de Abertura</label><input class="input" type="date" id="ned-abertura"></div>
+            <div class="field"><label>Data de Encerramento</label><input class="input" type="date" id="ned-encerramento"></div>
+          </div>
+          <div class="field"><label>Objeto do Edital</label><input class="input" id="ned-objeto"></div>
+          <div class="field"><label>Local de Entrega / Execução</label><input class="input" id="ned-local"></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-edital')">Cancelar</button>
+      <button class="btn btn-primary" id="ned-save-btn" onclick="saveEdital()">✅ Confirmar e Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Upload Documento -->
+<div class="modal-overlay" id="modal-doc-upload">
+  <div class="modal" style="width:460px">
+    <div class="modal-header">
+      <div class="modal-title">Upload de Documento</div>
+      <button class="btn-icon" onclick="closeModal('modal-doc-upload')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field"><label>Empresa</label><select class="input" id="doc-empresa-sel"></select></div>
+      <div class="form-row cols2">
+        <div class="field"><label>Categoria</label>
+          <select class="input" id="doc-categoria">
+            <option value="juridica">Jurídica</option>
+            <option value="fiscal">Fiscal</option>
+            <option value="trabalhista">Trabalhista</option>
+            <option value="economica">Econômica</option>
+            <option value="tecnica">Técnica</option>
+          </select>
+        </div>
+        <div class="field"><label>Tipo</label>
+          <select class="input" id="doc-tipo">
+            <option>Contrato Social</option><option>CND Federal</option><option>Certidão FGTS</option>
+            <option>Certidão TST</option><option>Balanço Patrimonial</option><option>Atestado Técnico</option>
+            <option>CAGED</option><option>Certidão Estadual</option><option>Registro Municipal</option><option>Outro</option>
+          </select>
+        </div>
+      </div>
+      <div class="field"><label>Data de Validade (deixe vazio se não houver)</label><input class="input" type="date" id="doc-validade"></div>
+      <div class="upload-zone" onclick="document.getElementById('doc-file-input').click()">
+        <div class="upload-icon" style="font-size:22px">📁</div>
+        <div class="upload-title" style="font-size:13px" id="doc-upload-title">Clique para selecionar o arquivo</div>
+        <div class="upload-sub">PDF, DOCX · Máx. 50MB</div>
+        <input type="file" id="doc-file-input" style="display:none" accept=".pdf,.docx" onchange="handleDocFileSelect(this)">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-doc-upload')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveDoc()">Enviar Documento</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Ver Empresa -->
+<div class="modal-overlay" id="modal-empresa-view">
+  <div class="modal" style="width:560px">
+    <div class="modal-header">
+      <div class="modal-title" id="view-empresa-title">Detalhes da Empresa</div>
+      <button class="btn-icon" onclick="closeModal('modal-empresa-view')">✕</button>
+    </div>
+    <div class="modal-body" id="view-empresa-body"></div>
+    <div class="modal-footer" id="view-empresa-footer"></div>
+  </div>
+</div>
+
+<!-- Notifications -->
+<div class="notif" id="notif-container"></div>
+
+<script>
+// ─────────────────── STATE ───────────────────
+// ─────────────────── CONFIG ───────────────────
+const WORKER_URL = 'https://licitax-worker.noronhaholandalicitacoes.workers.dev';
+
+// ─────────────────── STATE ───────────────────
+const STATE = {
+  empresas: [],
+  editais: [],
+  documentos: [],
+  alertas: [],
+  docFilter: 'all',
+  editaisFilter: 'all',
+  currentEditalId: null,
+  nextId: 10
+};
+
+// ─────────────────── UTILS ───────────────────
+function getEmpresa(id){ return STATE.empresas.find(e=>e.id===id) }
+function getEdital(id){ return STATE.editais.find(e=>e.id===id) }
+function fmtDate(d){ if(!d) return '—'; const [y,m,dd]=d.split('-'); return `${dd}/${m}/${y}` }
+function fmtMoeda(v){ return 'R$ '+Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}) }
+function genId(){ return ++STATE.nextId }
+
+function notify(msg, type='info'){
+  const c=document.getElementById('notif-container');
+  const d=document.createElement('div');
+  d.className=`notif-item ${type}`;
+  const icons={success:'✅',error:'❌',info:'ℹ️'};
+  d.innerHTML=`<span>${icons[type]||'ℹ️'}</span><span>${msg}</span>`;
+  c.appendChild(d);
+  setTimeout(()=>d.remove(),3500);
+}
+
+function openModal(id){ document.getElementById(id).classList.add('open') }
+function closeModal(id){ document.getElementById(id).classList.remove('open') }
+document.addEventListener('click',e=>{ if(e.target.classList.contains('modal-overlay')) e.target.classList.remove('open') })
+
+// ─────────────────── NAVIGATION ───────────────────
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const pg=document.getElementById('page-'+id);
+  if(pg) pg.classList.add('active');
+  const ni=document.querySelector(`.nav-item[data-page="${id}"]`);
+  if(ni) ni.classList.add('active');
+  window.scrollTo(0,0);
+  if(id==='dashboard') renderDashboard();
+  if(id==='empresas') renderEmpresas();
+  if(id==='editais') renderEditaisTable();
+  if(id==='documentos') { renderDocsEmpresaSelect(); renderDocsTable(); renderAnaliseEditalSelect(); }
+  if(id==='propostas') { renderPropostaEmpresaSelect(); renderPropostaEditalSelect(); renderProposal(); }
+  if(id==='alertas') renderAlertas();
+  if(id==='ia-assistente') { const k=STATE.apiKey||(localStorage.getItem('licitax_config')&&JSON.parse(localStorage.getItem('licitax_config')||'{}').apiKey)||''; setAIStatus(k&&k.startsWith('sk-ant')?'ok':'idle'); }
+}
+
+document.querySelectorAll('.nav-item[data-page]').forEach(el=>{
+  el.addEventListener('click',()=>showPage(el.dataset.page));
+});
+
+// ─────────────────── DASHBOARD ───────────────────
+function renderDashboard(){
+  document.getElementById('stat-empresas').textContent=STATE.empresas.length;
+  document.getElementById('stat-editais').textContent=STATE.editais.length;
+  document.getElementById('stat-propostas').textContent=STATE.editais.filter(e=>e.status==='analyzed').length;
+
+  // Editais table
+  const tbody=document.getElementById('dash-editais-tbody');
+  const recent=STATE.editais.slice(-5).reverse();
+  tbody.innerHTML=recent.map(e=>{
+    const emp=getEmpresa(e.empresaId);
+    return `<tr class="clickable" onclick="viewEdital(${e.id})">
+      <td><div style="font-weight:500;font-size:13px">${e.orgao}</div><div style="font-size:11.5px;color:var(--txt3)">${e.modalidade} nº ${e.numero}</div></td>
+      <td><span class="modality">${e.modalidade.split(' ')[0]}</span></td>
+      <td style="font-size:12.5px">${fmtDate(e.abertura)}</td>
+      <td>${statusBadge(e.status)}</td>
+      <td>${aptidaoBadge(e.aptidao)}</td>
+    </tr>`;
+  }).join('');
+
+  // Alerts
+  const al=document.getElementById('dash-alerts-list');
+  const ativos=STATE.alertas.filter(a=>!a.lido);
+  if(ativos.length===0){ al.innerHTML='<div style="font-size:12.5px;color:var(--txt3);text-align:center;padding:10px">Nenhum alerta ativo</div>'; }
+  else al.innerHTML=ativos.map(a=>`
+    <div class="al-item ${a.tipo}"><div class="al-icon">${alertIcon(a.tipo)}</div>
+    <div class="al-text"><strong>${a.titulo}</strong>${a.msg}</div></div>`).join('');
+
+  // Checklist for first analyzed edital
+  const ed=STATE.editais.find(e=>e.status==='analyzed');
+  if(ed && ed.requisitos.length>0){
+    const card=document.getElementById('dash-checklist-card');
+    card.style.display='block';
+    const docs=STATE.documentos.filter(d=>d.empresaId===ed.empresaId);
+    const docTipos=docs.map(d=>d.tipo.toLowerCase());
+    const items=ed.requisitos.slice(0,6).map(r=>{
+      const found=docTipos.some(t=>r.toLowerCase().split(' ').some(w=>w.length>4&&t.includes(w)));
+      return `<div class="ck-item ${found?'done':''}"><div class="ck-box">${found?'✓':''}</div><div class="ck-label" style="font-size:12px">${r}</div></div>`;
+    }).join('');
+    document.getElementById('dash-checklist-content').innerHTML=`<div class="ck-list">${items}</div>`;
+  }
+  document.getElementById('nb-alertas').textContent=STATE.alertas.filter(a=>!a.lido).length;
+}
+
+function alertIcon(t){ return t==='crit'?'🚨':t==='high'?'⚠️':'📌' }
+
+function statusBadge(s){
+  if(s==='analyzed') return '<span class="badge bg"><span class="bdot"></span>Analisado</span>';
+  if(s==='analyzing') return '<div class="pulse-row"><div class="pd"></div><div class="pd"></div><div class="pd"></div><span style="margin-left:4px">Analisando</span></div>';
+  if(s==='error') return '<span class="badge br"><span class="bdot"></span>Erro</span>';
+  return '<span class="badge bgr"><span class="bdot"></span>Pendente</span>';
+}
+function aptidaoBadge(a){
+  if(a==='apto') return '<span class="badge bg">✅ Apto</span>';
+  if(a==='restricao') return '<span class="badge ba">⚠️ Restrições</span>';
+  if(a==='inapto') return '<span class="badge br">❌ Inapto</span>';
+  return '<span class="badge bgr">— Pendente</span>';
+}
+
+// ─────────────────── EMPRESAS ───────────────────
+function renderEmpresas(){
+  const g=document.getElementById('empresas-grid');
+  g.innerHTML=STATE.empresas.map(e=>{
+    const edsCount=STATE.editais.filter(ed=>ed.empresaId===e.id).length;
+    return `<div class="company-card">
+      <div class="company-logo" style="background:${e.logoData?'white':e.cor}">${e.logoData?`<img src="${e.logoData}" style="width:100%;height:100%;object-fit:contain;border-radius:9px">`:e.logo}</div>
+      <div class="company-name">${e.fantasia||e.razao}</div>
+      <div class="company-cnpj">${e.cnpj}</div>
+      <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px">
+        <span class="badge bg">✓ Ativa</span>
+        <span class="badge bb">${edsCount} edital${edsCount!==1?'is':''}</span>
+      </div>
+      <div class="divider" style="margin:10px 0"></div>
+      <div style="display:flex;gap:7px">
+        <button class="btn btn-ghost btn-sm" style="flex:1" onclick="viewEmpresa(${e.id})">Ver</button>
+        <button class="btn btn-ghost btn-sm" style="flex:1" onclick="openEmpresaModal(${e.id})">Editar</button>
+        <button class="btn btn-primary btn-sm" style="flex:1" onclick="showPage('editais')">Editais</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteEmpresa(${e.id})" title="Excluir empresa" style="padding:0 10px">🗑️</button>
+      </div>
+    </div>`;
+  }).join('');
+  g.innerHTML+=`<div class="add-card" onclick="openEmpresaModal()"><div style="font-size:26px">+</div><div style="font-size:13px;font-weight:500">Nova Empresa</div><div style="font-size:11.5px;text-align:center;line-height:1.5">Insira o CNPJ e preenchemos<br>os dados automaticamente</div></div>`;
+  document.getElementById('nb-empresas').textContent=STATE.empresas.length;
+}
+
+function openEmpresaModal(id){
+  document.getElementById('emp-cnpj').value='';
+  document.getElementById('emp-razao').value='';
+  document.getElementById('emp-fantasia').value='';
+  document.getElementById('emp-email').value='';
+  document.getElementById('emp-telefone').value='';
+  document.getElementById('emp-endereco').value='';
+  document.getElementById('emp-website').value='';
+  document.getElementById('emp-logo-data').value='';
+  document.getElementById('emp-logo-preview').innerHTML='🏢';
+  document.getElementById('emp-logo-preview').style.fontSize='26px';
+  document.getElementById('emp-timbrado-data').value='';
+  document.getElementById('emp-timbrado-type').value='';
+  document.getElementById('emp-timbrado-preview').textContent='Sem timbrado';
+  document.getElementById('emp-edit-id').value='';
+  document.getElementById('cnpj-status').textContent='';
+  document.getElementById('modal-empresa-title').textContent='Nova Empresa';
+  if(id){
+    const e=getEmpresa(id);
+    if(!e) return;
+    document.getElementById('modal-empresa-title').textContent='Editar Empresa';
+    document.getElementById('emp-cnpj').value=e.cnpj;
+    document.getElementById('emp-razao').value=e.razao;
+    document.getElementById('emp-fantasia').value=e.fantasia;
+    document.getElementById('emp-email').value=e.email;
+    document.getElementById('emp-telefone').value=e.telefone;
+    document.getElementById('emp-endereco').value=e.endereco;
+    document.getElementById('emp-website').value=e.website||'';
+    document.getElementById('emp-edit-id').value=id;
+    // Restaurar logo
+    if(e.logoData){
+      document.getElementById('emp-logo-data').value=e.logoData;
+      const prev=document.getElementById('emp-logo-preview');
+      prev.innerHTML=`<img src="${e.logoData}" style="width:100%;height:100%;object-fit:contain;border-radius:8px">`;
+      prev.style.fontSize='';
+    }
+    // Restaurar timbrado
+    if(e.timbradoData){
+      document.getElementById('emp-timbrado-data').value=e.timbradoData;
+      document.getElementById('emp-timbrado-type').value=e.timbradoType||'image';
+      const tp=document.getElementById('emp-timbrado-preview');
+      if((e.timbradoType||'').startsWith('image')){
+        tp.innerHTML=`<img src="${e.timbradoData}" style="width:100%;height:100%;object-fit:cover;border-radius:8px">`;
+      } else {
+        tp.textContent='PDF anexado ✅';
+        tp.style.color='var(--grn)';
+      }
+    }
+  }
+  openModal('modal-empresa');
+}
+
+function saveEmpresa(){
+  const cnpj=document.getElementById('emp-cnpj').value.trim();
+  const razao=document.getElementById('emp-razao').value.trim();
+  if(!cnpj||!razao){ notify('Preencha ao menos CNPJ e Razão Social.','error'); return; }
+  const editId=parseInt(document.getElementById('emp-edit-id').value)||0;
+  const endereco=document.getElementById('emp-endereco').value.trim();
+  const telefone=document.getElementById('emp-telefone').value.trim();
+  const email=document.getElementById('emp-email').value.trim();
+  const logoData=document.getElementById('emp-logo-data').value;
+  const timbradoData=document.getElementById('emp-timbrado-data').value;
+  const timbradoType=document.getElementById('emp-timbrado-type').value;
+
+  // Rodapé gerado automaticamente dos dados cadastrados
+  const rodapeParts=[razao,`CNPJ: ${cnpj}`,endereco,telefone,email].filter(Boolean);
+  const rodape=rodapeParts.join(' · ');
+
+  const data={
+    cnpj, razao,
+    fantasia:document.getElementById('emp-fantasia').value.trim()||razao,
+    email, telefone, endereco,
+    website:document.getElementById('emp-website').value.trim(),
+    rodape,
+    logoData: logoData||null,
+    timbradoData: timbradoData||null,
+    timbradoType: timbradoType||null,
+    // logo emoji fallback para cards (será substituído pela img quando tiver logoData)
+    logo: logoData?'📷':'🏢',
+    cor: editId
+      ? (STATE.empresas.find(e=>e.id===editId)?.cor||`linear-gradient(135deg,hsl(${Math.random()*360|0},60%,25%),hsl(${Math.random()*360|0},60%,35%))`)
+      : `linear-gradient(135deg,hsl(${Math.random()*360|0},60%,25%),hsl(${Math.random()*360|0},60%,35%))`
+  };
+  if(editId){
+    const idx=STATE.empresas.findIndex(e=>e.id===editId);
+    if(idx>=0){ STATE.empresas[idx]={...STATE.empresas[idx],...data}; notify('Empresa atualizada com sucesso!','success'); }
+  } else {
+    STATE.empresas.push({id:genId(),...data});
+    notify('Empresa cadastrada com sucesso!','success');
+  }
+  closeModal('modal-empresa');
+  renderEmpresas();
+  updateAllSelects();
+}
+
+function deleteEmpresa(id){
+  const e=STATE.empresas.find(emp=>emp.id===id);
+  if(!e) return;
+  const editaisVinculados=STATE.editais.filter(ed=>ed.empresaId===id).length;
+  const avisoHtml=editaisVinculados>0
+    ?`<div style="margin-top:10px;padding:8px 12px;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.25);border-radius:8px;font-size:12px;color:var(--amb)">⚠️ Esta empresa possui <strong>${editaisVinculados} edital(is)</strong> vinculado(s).</div>`
+    :'';
+
+  document.getElementById('dialog-confirm-excluir')?.remove();
+  const d=document.createElement('div');
+  d.id='dialog-confirm-excluir';
+  d.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center';
+  d.innerHTML=`
+    <div style="background:var(--surf);border:1px solid var(--bord2);border-radius:16px;padding:28px;max-width:380px;width:90%;box-shadow:0 24px 64px rgba(0,0,0,.5)">
+      <div style="font-size:32px;margin-bottom:12px;text-align:center">🗑️</div>
+      <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700;text-align:center;margin-bottom:6px">Excluir empresa?</div>
+      <div style="font-size:13px;color:var(--txt2);text-align:center;margin-bottom:4px"><strong style="color:var(--txt)">${e.fantasia||e.razao}</strong></div>
+      <div style="font-size:12px;color:var(--txt3);text-align:center">CNPJ ${e.cnpj}</div>
+      ${avisoHtml}
+      <div style="font-size:12px;color:var(--txt3);text-align:center;margin-top:10px">Esta ação não pode ser desfeita.</div>
+      <div style="display:flex;gap:10px;margin-top:20px">
+        <button id="btn-cancelar-excluir" style="flex:1;padding:10px;border-radius:9px;border:1px solid var(--bord2);background:none;color:var(--txt2);font-size:13px;cursor:pointer">Cancelar</button>
+        <button id="btn-confirmar-excluir" style="flex:1;padding:10px;border-radius:9px;border:none;background:var(--red);color:#fff;font-size:13px;font-weight:600;cursor:pointer">Excluir</button>
+      </div>
+    </div>`;
+  document.body.appendChild(d);
+
+  d.querySelector('#btn-cancelar-excluir').onclick=()=>d.remove();
+  d.querySelector('#btn-confirmar-excluir').onclick=()=>{
+    d.remove();
+    STATE.empresas=STATE.empresas.filter(emp=>emp.id!==id);
+    notify(`Empresa "${e.fantasia||e.razao}" excluída.`,'info');
+    renderEmpresas();
+    updateAllSelects();
+    saveState();
+  };
+  d.onclick=ev=>{ if(ev.target===d) d.remove(); };
+}
+
+function viewEmpresa(id){
+  const e=getEmpresa(id);
+  if(!e) return;
+  document.getElementById('view-empresa-title').textContent=e.fantasia||e.razao;
+  document.getElementById('view-empresa-body').innerHTML=`
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">
+      <div style="width:56px;height:56px;border-radius:12px;background:${e.cor};display:flex;align-items:center;justify-content:center;font-size:26px">${e.logo}</div>
+      <div><div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700">${e.razao}</div><div style="font-size:12px;color:var(--txt3);font-family:monospace">${e.cnpj}</div></div>
+    </div>
+    <div class="form-row cols2">
+      <div class="field"><label>Email</label><div style="font-size:13.5px">${e.email||'—'}</div></div>
+      <div class="field"><label>Telefone</label><div style="font-size:13.5px">${e.telefone||'—'}</div></div>
+      <div class="field" style="grid-column:1/-1"><label>Endereço</label><div style="font-size:13.5px">${e.endereco||'—'}</div></div>
+      <div class="field"><label>Website</label><div style="font-size:13.5px">${e.website||'—'}</div></div>
+      <div class="field"><label>Editais</label><div style="font-size:13.5px">${STATE.editais.filter(ed=>ed.empresaId===e.id).length} cadastrados</div></div>
+    </div>`;
+  document.getElementById('view-empresa-footer').innerHTML=`
+    <button class="btn btn-ghost" onclick="closeModal('modal-empresa-view')">Fechar</button>
+    <button class="btn btn-ghost" onclick="closeModal('modal-empresa-view');openEmpresaModal(${e.id})">✏️ Editar</button>
+    <button class="btn btn-primary" onclick="closeModal('modal-empresa-view');showPage('editais')">Ver Editais</button>`;
+  openModal('modal-empresa-view');
+}
+
+// ─────────────────── LOGO & TIMBRADO UPLOAD ───────────────────
+function previewLogoUpload(input){
+  const file=input.files[0];
+  if(!file) return;
+  if(!file.type.startsWith('image/')){ notify('Selecione uma imagem (PNG, JPG, SVG).','error'); return; }
+  if(file.size>2*1024*1024){ notify('Imagem muito grande. Use até 2MB.','error'); return; }
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const data=e.target.result;
+    document.getElementById('emp-logo-data').value=data;
+    const prev=document.getElementById('emp-logo-preview');
+    prev.innerHTML=`<img src="${data}" style="width:100%;height:100%;object-fit:contain;border-radius:8px">`;
+    prev.style.fontSize='';
+    prev.style.borderColor='var(--grn)';
+    notify('Logo carregada!','success');
+  };
+  reader.readAsDataURL(file);
+}
+
+function previewTimbradoUpload(input){
+  const file=input.files[0];
+  if(!file) return;
+  const isImg=file.type.startsWith('image/');
+  const isPDF=file.type==='application/pdf';
+  if(!isImg&&!isPDF){ notify('Selecione uma imagem ou PDF.','error'); return; }
+  if(file.size>5*1024*1024){ notify('Arquivo muito grande. Use até 5MB.','error'); return; }
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const data=e.target.result;
+    document.getElementById('emp-timbrado-data').value=data;
+    document.getElementById('emp-timbrado-type').value=file.type;
+    const tp=document.getElementById('emp-timbrado-preview');
+    tp.style.borderColor='var(--grn)';
+    if(isImg){
+      tp.innerHTML=`<img src="${data}" style="width:100%;height:100%;object-fit:cover;border-radius:8px">`;
+    } else {
+      tp.textContent='';
+      tp.style.color='var(--grn)';
+      tp.innerHTML=`<div style="text-align:center"><div style="font-size:22px">📄</div><div style="font-size:10px;color:var(--grn);margin-top:2px">PDF pronto</div></div>`;
+    }
+    notify('Papel timbrado anexado!','success');
+  };
+  reader.readAsDataURL(file);
+}
+
+// Atualizar card de empresa para mostrar logo real
+function getLogoHtml(e, size=44){
+  if(e.logoData){
+    return `<div style="width:${size}px;height:${size}px;border-radius:${size>40?'10px':'8px'};overflow:hidden;background:white;display:flex;align-items:center;justify-content:center"><img src="${e.logoData}" style="width:100%;height:100%;object-fit:contain"></div>`;
+  }
+  return `<div style="width:${size}px;height:${size}px;border-radius:${size>40?'10px':'8px'};background:${e.cor};display:flex;align-items:center;justify-content:center;font-size:${size*0.45}px">${e.logo||'🏢'}</div>`;
+}
+
+function formatCNPJ(el){
+  let v=el.value.replace(/\D/g,'');
+  v=v.replace(/^(\d{2})(\d)/,'$1.$2');
+  v=v.replace(/^(\d{2})\.(\d{3})(\d)/,'$1.$2.$3');
+  v=v.replace(/\.(\d{3})(\d)/,'.$1/$2');
+  v=v.replace(/(\d{4})(\d)/,'$1-$2');
+  el.value=v.slice(0,18);
+}
+
+function autoFillCNPJ(){
+  notify('Preencha os dados da empresa manualmente nos campos abaixo.','info');
+}
+
+
+// ── Edital: modal open/close ──
+function openNewEditalModal(){
+  // Precisa ter pelo menos uma empresa cadastrada
+  if(!STATE.empresas.length){
+    notify('Cadastre uma empresa primeiro antes de adicionar um edital.','error');
+    showPage('empresas');
+    setTimeout(()=>openEmpresaModal(),300);
+    return;
+  }
+
+  window._ned_edit_id=null;
+  window._ned_extracted=null;
+
+  document.getElementById('ned-upload-title').textContent='Arraste o edital aqui ou clique para selecionar';
+  document.getElementById('ned-upload-sub').textContent='PDF ou DOCX · Máximo 50 MB · A IA extrai todos os dados automaticamente';
+  document.getElementById('ned-upload-icon').textContent='📁';
+  document.getElementById('ned-upload-zone').classList.remove('drag');
+  document.getElementById('ned-upload-zone').style.pointerEvents='auto';
+  document.getElementById('ned-ai-progress').style.display='none';
+  document.getElementById('ned-extracted').style.display='none';
+  document.getElementById('ned-orgao').value='';
+  document.getElementById('ned-numero').value='';
+  document.getElementById('ned-processo').value='';
+  document.getElementById('ned-abertura').value='';
+  document.getElementById('ned-encerramento').value='';
+  document.getElementById('ned-objeto').value='';
+  document.getElementById('ned-local').value='';
+
+  // Título do modal
+  const title=document.querySelector('#modal-edital .modal-title');
+  if(title) title.textContent='Novo Edital';
+
+  // Botão salvar — sempre visível, permite salvar mesmo sem upload
+  const saveBtn=document.getElementById('ned-save-btn');
+  saveBtn.style.display='inline-flex';
+  saveBtn.textContent='✅ Confirmar e Salvar';
+
+  // Popular select de empresas
+  const sel=document.getElementById('ned-empresa');
+  sel.innerHTML=STATE.empresas.map(e=>`<option value="${e.id}">${e.fantasia||e.razao}</option>`).join('');
+
+  // Reset file input
+  const fi=document.getElementById('ned-file-input');
+  if(fi) fi.value='';
+
+  // Popular campo de chave
+  const keyInput=document.getElementById('ned-key-input');
+  const keyStatus=document.getElementById('ned-key-status');
+  const savedKey=window.LICITAX_KEY||STATE.apiKey||
+    (()=>{try{return JSON.parse(localStorage.getItem('licitax_config')||'{}').apiKey||'';}catch(e){return '';}})()||
+    (()=>{try{return localStorage.getItem('licitax_apikey')||'';}catch(e){return '';}})()||
+    document.getElementById('cfg-api-key')?.value||'';
+  if(savedKey){
+    keyInput.value=savedKey;
+    keyInput.style.color='var(--grn)';
+    keyStatus.textContent='✅ pronta';
+    keyStatus.style.color='var(--grn)';
+    window.LICITAX_KEY=savedKey;
+    STATE.apiKey=savedKey;
+  } else {
+    keyInput.value='';
+    keyInput.style.color='var(--txt1)';
+    keyStatus.textContent='não salva';
+    keyStatus.style.color='var(--txt3)';
+  }
+
+  openModal('modal-edital');
+}
+
+function handleFileDrop(ev){
+  ev.preventDefault();
+  ev.currentTarget.classList.remove('drag');
+  const f=ev.dataTransfer.files[0];
+  if(f) processUploadedFile(f);
+}
+
+function handleFileSelect(input){
+  if(input.files&&input.files[0]) processUploadedFile(input.files[0]);
+}
+
+function processUploadedFile(file){
+  if(!file) return;
+  window._ned_last_file=file; // salva para retry
+  const okExt=/\.(pdf|doc|docx)$/i.test(file.name);
+  if(!okExt){ notify('Formato inválido. Use PDF ou DOCX.','error'); return; }
+  if(file.size>52428800){ notify('Arquivo muito grande. Máximo 50 MB.','error'); return; }
+
+
+  // UI: arquivo aceito
+  const zone=document.getElementById('ned-upload-zone');
+  zone.style.pointerEvents='none';
+  zone.classList.add('drag');
+  document.getElementById('ned-upload-icon').textContent='📎';
+  document.getElementById('ned-upload-title').textContent=file.name;
+  document.getElementById('ned-upload-sub').textContent=`${(file.size/1024/1024).toFixed(1)} MB · Enviando para análise…`;
+
+  const progress=document.getElementById('ned-ai-progress');
+  const extracted=document.getElementById('ned-extracted');
+  const saveBtn=document.getElementById('ned-save-btn');
+  const stepsEl=document.getElementById('ned-ai-steps');
+
+  progress.style.display='block';
+  extracted.style.display='none';
+  saveBtn.style.display='none';
+  stepsEl.innerHTML='<div style="color:var(--acc2);font-size:13px">⏳ Lendo o documento…</div>';
+
+  // Helper: lê chave de todas as fontes — campo do modal tem prioridade
+  const _gkey=()=>{
+    let k=document.getElementById('ned-key-input')?.value?.trim()||'';
+    if(!k) k=window.LICITAX_KEY||STATE.apiKey||'';
+    if(!k){try{const c=localStorage.getItem('licitax_config');if(c)k=JSON.parse(c).apiKey||'';}catch(e){}}
+    if(!k){try{k=localStorage.getItem('licitax_apikey')||'';}catch(e){}}
+    if(!k) k=document.getElementById('cfg-api-key')?.value||'';
+    return k.trim();
+  };
+  const apiKey=_gkey();
+
+  if(!apiKey){
+    const errHtml=[
+      '<div style="color:var(--red);font-size:13px;margin-bottom:10px">❌ Chave API não encontrada.</div>',
+      '<div style="font-size:12px;color:var(--txt2);margin-bottom:8px">Cole sua chave Gemini <b>AIza...</b> para continuar:</div>',
+      '<div style="display:flex;gap:8px">',
+        '<input id="ned-ikey" type="password" placeholder="AIza......" ',
+          'style="flex:1;padding:8px 10px;border-radius:8px;border:1px solid var(--bord2);',
+          'background:var(--surf2);color:var(--txt1);font-size:12px;font-family:monospace">',
+        '<button id="ned-ikey-btn" ',
+          'style="padding:8px 14px;border-radius:8px;border:none;background:var(--acc1);',
+          'color:#fff;font-size:12px;cursor:pointer;white-space:nowrap">▶ Usar</button>',
+      '</div>'
+    ].join('');
+    stepsEl.innerHTML=errHtml;
+    document.getElementById('ned-ikey-btn').addEventListener('click',function(){
+      const k=(document.getElementById('ned-ikey').value||'').trim();
+      if(!k){notify('Cole a chave primeiro.','error');return;}
+      window.LICITAX_KEY=k; STATE.apiKey=k;
+      try{localStorage.setItem('licitax_apikey',k);}catch(e){}
+      try{const c=JSON.parse(localStorage.getItem('licitax_config')||'{}');c.apiKey=k;localStorage.setItem('licitax_config',JSON.stringify(c));}catch(e){}
+      const campo=document.getElementById('cfg-api-key');if(campo)campo.value=k;
+      notify('✅ Chave salva! Processando…','success');
+      processUploadedFile(window._ned_last_file);
+    });
+    return;
+  }
+
+  stepsEl.innerHTML='<div style="color:var(--acc2);font-size:13px">🔍 Lendo PDF e enviando para IA…</div>';
+
+  const reader=new FileReader();
+  reader.onerror=()=>{ stepsEl.innerHTML='<div style="color:var(--red)">❌ Erro ao ler o arquivo.</div>'; };
+  reader.onload=async ev=>{
+    const base64=ev.target.result.split(',')[1];
+    const isPDF=file.name.toLowerCase().endsWith('.pdf');
+
+    stepsEl.innerHTML='<div style="color:var(--acc2);font-size:13px">🔍 IA analisando o documento…</div>';
+
+    try{
+      const prompt='Leia este edital de licitação pública brasileira e extraia TODAS as informações. Retorne APENAS JSON puro, sem texto, sem markdown. Estrutura: {"orgao":"","numero":"","processo":"","modalidade":"","abertura":"YYYY-MM-DD ou null","encerramento":"YYYY-MM-DD ou null","objeto":"","local":"","requisitos":["doc1"],"items":[{"n":1,"desc":"","un":"","qtd":0,"estimado":0}],"alertas":[{"tipo":"high","msg":""}]}';
+
+      const parts=isPDF
+        ? [{text:prompt},{inline_data:{mime_type:'application/pdf',data:base64}}]
+        : [{text:prompt+'\n\nCONTEÚDO:\n'+atob(base64).slice(0,12000)}];
+
+      const res=await fetch(
+        WORKER_URL,
+        {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts}]})}
+      );
+
+      const data=await res.json();
+
+      if(!res.ok){
+        const msg=data.error?.message||'HTTP '+res.status;
+        stepsEl.innerHTML='<div style="color:var(--red);font-size:13px">❌ Erro: '+msg+'</div>';
+        return;
+      }
+
+      const rawText=data.candidates?.[0]?.content?.parts?.[0]?.text||'';
+      if(!rawText){
+        stepsEl.innerHTML='<div style="color:var(--red);font-size:13px">❌ API não retornou texto.</div>';
+        return;
+      }
+      if(!rawText){
+        stepsEl.innerHTML='<div style="color:var(--red);font-size:13px">❌ API não retornou texto.</div>';
+        return;
+      }
+
+      // Parse JSON — tenta direto, depois sem backticks, depois regex
+      let parsed=null;
+      const attempts=[
+        ()=>JSON.parse(rawText),
+        ()=>JSON.parse(rawText.replace(/```json\s*/gi,'').replace(/```\s*/g,'').trim()),
+        ()=>{ const m=rawText.match(/\{[\s\S]*\}/); if(m) return JSON.parse(m[0]); throw new Error('no match'); }
+      ];
+      for(const attempt of attempts){
+        try{ parsed=attempt(); break; }catch(e){ continue; }
+      }
+
+      if(!parsed){
+        // Mostrar resposta bruta para diagnóstico
+        stepsEl.innerHTML=`<div style="color:var(--red);font-size:13px">❌ Não foi possível interpretar a resposta da IA.</div>
+          <div style="font-size:11px;color:var(--txt3);margin-top:8px;background:var(--bg);padding:8px;border-radius:6px;max-height:150px;overflow:auto;word-break:break-all">${rawText.slice(0,800)}</div>`;
+        return;
+      }
+
+      // Preencher campos
+      _preencherCamposEdital(parsed);
+
+    }catch(err){
+      stepsEl.innerHTML=`<div style="color:var(--red);font-size:13px">❌ Erro: ${err.message}</div>`;
+      console.error('[LicitaX] Erro extração:', err);
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+function _preencherCamposEdital(d){
+  const progress=document.getElementById('ned-ai-progress');
+  const extracted=document.getElementById('ned-extracted');
+  const saveBtn=document.getElementById('ned-save-btn');
+
+  // Helper robusto
+  const pegar=(...chaves)=>{
+    for(const k of chaves){
+      const v=d[k];
+      if(v!==null&&v!==undefined&&String(v).trim()!==''&&String(v).trim()!=='null') return String(v).trim();
+    }
+    return '';
+  };
+
+  const orgao   = pegar('orgao','órgão','organ','entidade','orgao_licitante','contratante');
+  const numero  = pegar('numero','número','edital','nr_edital','numero_edital','licitacao','numero_licitacao','pregao');
+  const processo= pegar('processo','nr_processo','numero_processo','proc','processo_administrativo');
+  const objeto  = pegar('objeto','descricao','descrição','objeto_licitacao','objeto_contrato');
+  const local   = pegar('local','endereco','endereço','cidade','municipio','localidade');
+  const abertura= pegar('abertura','data_abertura','data_sessao','data_licitacao','dt_abertura');
+  const encerr  = pegar('encerramento','data_encerramento','prazo','data_limite','dt_encerramento');
+
+  const modalRaw= pegar('modalidade','tipo','tipo_licitacao','modality');
+  const mods=['Pregão Eletrônico','Pregão Presencial','Concorrência','Tomada de Preços','Convite','Dispensa','Inexigibilidade','RDC','Leilão'];
+  let modalidade='Pregão Eletrônico';
+  for(const m of mods){ if(modalRaw.toLowerCase().includes(m.split(' ')[0].toLowerCase())){modalidade=m;break;} }
+
+  // Preencher inputs
+  const set=(id,val)=>{ const el=document.getElementById(id); if(el) el.value=val; };
+  set('ned-orgao',    orgao);
+  set('ned-numero',   numero);
+  set('ned-processo', processo);
+  set('ned-objeto',   objeto);
+  set('ned-local',    local);
+  set('ned-abertura', abertura);
+  set('ned-encerramento', encerr);
+  const modSel=document.getElementById('ned-modalidade');
+  if(modSel) modSel.value=modalidade;
+
+  // Items
+  const rawItems=d.items||d.itens||d.lotes||d.produtos||[];
+  const items=rawItems.filter(Boolean).map((it,i)=>({
+    n:     Number(it.n||it.item||i+1),
+    desc:  String(it.desc||it.descricao||it.descrição||it.nome||it.objeto||''),
+    un:    String(it.un||it.unidade||'un'),
+    qtd:   Number(it.qtd||it.quantidade||1)||1,
+    estimado: Number(it.estimado||it.valor_unitario||it.preco||0)||0,
+    proposto: 0
+  })).filter(it=>it.desc);
+
+  // Requisitos
+  const rawReqs=d.requisitos||d.documentos||d.habilitacao||[];
+  const requisitos=Array.isArray(rawReqs)
+    ? rawReqs.map(r=>typeof r==='string'?r:(r.nome||r.descricao||String(r))).filter(Boolean)
+    : [];
+
+  // Alertas
+  const rawAlertas=d.alertas||d.avisos||[];
+  const alertas=Array.isArray(rawAlertas)
+    ? rawAlertas.map(a=>({tipo:a.tipo||'med',msg:a.msg||a.mensagem||String(a)})).filter(a=>a.msg)
+    : [];
+  if(!alertas.length && abertura)
+    alertas.push({tipo:'high',msg:`Abertura: ${new Date(abertura+'T12:00:00').toLocaleDateString('pt-BR')}`});
+
+  window._ned_extracted={requisitos,items,alertas};
+
+  // Mostrar resultado com IA
+  progress.style.display='none';
+  const cabIa=document.querySelector('#ned-extracted>div:first-child');
+  if(cabIa){ cabIa.innerHTML='<span style="color:var(--grn);font-size:15px">✅</span><span style="font-size:13px;font-weight:600;color:var(--grn)">Dados extraídos pela IA</span><span style="font-size:11.5px;color:var(--txt3)"> — revise e confirme</span>'; }
+
+  const resumo=[];
+  if(orgao)   resumo.push(`Órgão: ${orgao.slice(0,40)}`);
+  if(numero)  resumo.push(`Edital nº ${numero}`);
+  if(items.length) resumo.push(`${items.length} item(ns)`);
+  if(requisitos.length) resumo.push(`${requisitos.length} requisito(s)`);
+
+  notify('✅ IA extraiu os dados do edital! '+(resumo.join(' · ')||'Revise os campos.'),'success');
+}
+
+
+let _editaisFilter='all';
+
+function filterEditais(status, el){
+  _editaisFilter=status;
+  document.querySelectorAll('#page-editais .tab').forEach(t=>t.classList.remove('active'));
+  if(el) el.classList.add('active');
+  renderEditaisTable();
+}
+
+function renderEditaisTable(){
+  const tbody=document.getElementById('editais-tbody');
+  if(!tbody) return;
+  const q=(document.getElementById('editais-search')?.value||'').toLowerCase();
+  let lista=STATE.editais.slice().reverse();
+  if(_editaisFilter!=='all') lista=lista.filter(e=>e.status===_editaisFilter);
+  if(q) lista=lista.filter(e=>
+    (e.orgao||'').toLowerCase().includes(q)||
+    (e.numero||'').toLowerCase().includes(q)||
+    (e.objeto||'').toLowerCase().includes(q)||
+    (e.modalidade||'').toLowerCase().includes(q)||
+    (getEmpresa(e.empresaId)?.fantasia||'').toLowerCase().includes(q)
+  );
+  if(!lista.length){
+    tbody.innerHTML=`<tr><td colspan="9" style="text-align:center;padding:28px;color:var(--txt3)">Nenhum edital encontrado.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML=lista.map(e=>{
+    const emp=getEmpresa(e.empresaId);
+    return `<tr class="clickable" onclick="viewEdital(${e.id})">
+      <td style="font-size:12px;color:var(--txt3)">${e.id}</td>
+      <td>
+        <div style="font-weight:500;font-size:13px">${e.orgao}</div>
+        <div style="font-size:11.5px;color:var(--txt3)">${e.modalidade} nº ${e.numero}</div>
+        ${e.objeto?`<div style="font-size:11px;color:var(--txt3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:260px">${e.objeto}</div>`:''}
+      </td>
+      <td style="font-size:12.5px">${emp?.fantasia||emp?.razao||'—'}</td>
+      <td><span class="modality">${(e.modalidade||'').split(' ')[0]}</span></td>
+      <td style="font-size:12.5px">${fmtDate(e.abertura)}</td>
+      <td style="font-size:12.5px">${fmtDate(e.encerramento)}</td>
+      <td>${statusBadge(e.status)}</td>
+      <td>${aptidaoBadge(e.aptidao)}</td>
+      <td onclick="event.stopPropagation()">
+        <div style="display:flex;gap:5px">
+          <button class="btn-icon btn-sm" onclick="viewEdital(${e.id})" title="Ver detalhes">👁️</button>
+          <button class="btn-icon btn-sm" style="color:var(--acc2)" onclick="editEdital(${e.id})" title="Editar">✏️</button>
+          <button class="btn-icon btn-sm" style="color:var(--red)" onclick="deleteEdital(${e.id})" title="Excluir">🗑️</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function editEdital(id){
+  const e=getEdital(id);
+  if(!e) return;
+  // Abre modal de edital preenchido
+  openNewEditalModal();
+  setTimeout(()=>{
+    document.getElementById('ned-orgao').value=e.orgao||'';
+    document.getElementById('ned-numero').value=e.numero||'';
+    document.getElementById('ned-processo').value=e.processo||'';
+    document.getElementById('ned-objeto').value=e.objeto||'';
+    document.getElementById('ned-local').value=e.local||'';
+    document.getElementById('ned-abertura').value=e.abertura||'';
+    document.getElementById('ned-encerramento').value=e.encerramento||'';
+    const modSel=document.getElementById('ned-modalidade');
+    if(modSel&&e.modalidade) modSel.value=e.modalidade;
+    const empSel=document.getElementById('ned-empresa');
+    if(empSel&&e.empresaId) empSel.value=e.empresaId;
+    window._ned_extracted={requisitos:e.requisitos||[],items:e.items||[],alertas:e.alertas||[]};
+    window._ned_edit_id=id;
+    document.getElementById('ned-extracted').style.display='block';
+    document.getElementById('ned-save-btn').style.display='flex';
+    document.getElementById('ned-ai-progress').style.display='none';
+    // Atualizar título do modal
+    const title=document.querySelector('#modal-edital .modal-title');
+    if(title) title.textContent='Editar Edital';
+    const saveBtn=document.getElementById('ned-save-btn');
+    if(saveBtn) saveBtn.querySelector('button')&&(saveBtn.querySelector('button').textContent='💾 Salvar Alterações');
+  },50);
+}
+
+function deleteEdital(id){
+  const e=getEdital(id);
+  if(!e) return;
+  document.getElementById('dialog-confirm-excluir')?.remove();
+  const d=document.createElement('div');
+  d.id='dialog-confirm-excluir';
+  d.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center';
+  d.innerHTML=`
+    <div style="background:var(--surf);border:1px solid var(--bord2);border-radius:16px;padding:28px;max-width:380px;width:90%;box-shadow:0 24px 64px rgba(0,0,0,.5)">
+      <div style="font-size:32px;margin-bottom:12px;text-align:center">🗑️</div>
+      <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700;text-align:center;margin-bottom:6px">Excluir edital?</div>
+      <div style="font-size:13px;color:var(--txt2);text-align:center;margin-bottom:4px"><strong style="color:var(--txt)">${e.modalidade} nº ${e.numero}</strong></div>
+      <div style="font-size:12px;color:var(--txt3);text-align:center">${e.orgao}</div>
+      <div style="font-size:12px;color:var(--txt3);text-align:center;margin-top:8px">Esta ação não pode ser desfeita.</div>
+      <div style="display:flex;gap:10px;margin-top:20px">
+        <button id="btn-cancelar-del-edital" style="flex:1;padding:10px;border-radius:9px;border:1px solid var(--bord2);background:none;color:var(--txt2);font-size:13px;cursor:pointer">Cancelar</button>
+        <button id="btn-confirmar-del-edital" style="flex:1;padding:10px;border-radius:9px;border:none;background:var(--red);color:#fff;font-size:13px;font-weight:600;cursor:pointer">Excluir</button>
+      </div>
+    </div>`;
+  document.body.appendChild(d);
+  d.querySelector('#btn-cancelar-del-edital').onclick=()=>d.remove();
+  d.querySelector('#btn-confirmar-del-edital').onclick=()=>{
+    d.remove();
+    STATE.editais=STATE.editais.filter(ed=>ed.id!==id);
+    notify('Edital excluído.','info');
+    renderEditaisTable();
+    renderDashboard();
+    saveState();
+  };
+  d.onclick=ev=>{ if(ev.target===d) d.remove(); };
+}
+
+function saveEdital(){
+  const empresaId=parseInt(document.getElementById('ned-empresa').value);
+  const orgao=document.getElementById('ned-orgao').value.trim();
+  const numero=document.getElementById('ned-numero').value.trim();
+  if(!orgao||!numero){ notify('Preencha ao menos o Órgão e o Número do Edital.','error'); return; }
+  const extras=window._ned_extracted||{requisitos:[],items:[],alertas:[]};
+  const dados={
+    empresaId, orgao, numero,
+    processo:document.getElementById('ned-processo').value.trim()||'—',
+    modalidade:document.getElementById('ned-modalidade').value,
+    abertura:document.getElementById('ned-abertura').value||null,
+    encerramento:document.getElementById('ned-encerramento').value||null,
+    objeto:document.getElementById('ned-objeto').value.trim(),
+    local:document.getElementById('ned-local').value.trim(),
+    status:'analyzed', aptidao:'apto',
+    fileName:document.getElementById('ned-file-input').files[0]?.name||'',
+    items:extras.items, requisitos:extras.requisitos, alertas:extras.alertas
+  };
+
+  const editId=window._ned_edit_id||null;
+  if(editId){
+    // Modo edição
+    const idx=STATE.editais.findIndex(e=>e.id===editId);
+    if(idx>=0) STATE.editais[idx]={...STATE.editais[idx],...dados};
+    window._ned_edit_id=null;
+    notify(`✅ Edital "${orgao} ${numero}" atualizado!`,'success');
+  } else {
+    // Novo edital
+    const novo={id:genId(),...dados};
+    STATE.editais.push(novo);
+    STATE.alertas.push(...extras.alertas.map(a=>({id:genId(),editalId:novo.id,tipo:a.tipo,titulo:a.tipo==='high'?'Atenção':'Informação',msg:a.msg,lido:false})));
+    notify(`✅ Edital "${orgao} ${numero}" salvo com sucesso!`,'success');
+  }
+
+  window._ned_extracted=null;
+  closeModal('modal-edital');
+  renderEditaisTable();
+  renderDashboard();
+  updateAllSelects();
+  saveState();
+}
+
+function viewEdital(id){
+  STATE.currentEditalId=id;
+  STATE._currentEditalId=id; // usado por relatório e email
+  const e=getEdital(id);
+  if(!e) return;
+  const emp=getEmpresa(e.empresaId);
+  document.getElementById('det-breadcrumb').textContent=`${e.modalidade} nº ${e.numero}`;
+  document.getElementById('det-title').textContent=e.orgao;
+
+  let itemsHtml='';
+  if(e.items&&e.items.length>0){
+    let total=0;
+    const rows=e.items.map(it=>{
+      const rowTotal=it.proposto*it.qtd;
+      total+=rowTotal;
+      return `<tr>
+        <td style="color:var(--txt3);font-family:monospace;font-size:11px">${String(it.n).padStart(2,'0')}</td>
+        <td><div style="font-size:13px;font-weight:500">${it.desc}</div></td>
+        <td style="font-size:13px">${it.un}</td>
+        <td style="font-size:13px">${it.qtd}</td>
+        <td style="font-size:13px;color:var(--txt2)">${fmtMoeda(it.estimado)}</td>
+        <td><input class="input" style="width:130px;font-size:12.5px;padding:5px 9px" value="${fmtMoeda(it.proposto)}" onchange="updateItemValue(${id},${it.n},this.value)"></td>
+        <td style="font-size:13px;font-weight:600;color:var(--grn)">${fmtMoeda(rowTotal)}</td>
+      </tr>`;
+    }).join('');
+    itemsHtml=`<div class="sh" style="margin-top:20px"><div class="sh-title">📦 Itens do Termo de Referência</div></div>
+    <div class="table-wrap" style="margin-bottom:20px"><table>
+      <thead><tr><th>#</th><th>Descrição</th><th>Un.</th><th>Qtd.</th><th>Estimado</th><th>Minha Proposta</th><th>Total</th></tr></thead>
+      <tbody>${rows}</tbody>
+      <tfoot><tr style="background:rgba(16,185,129,.06)"><td colspan="5"></td>
+        <td style="padding:13px 14px;font-size:13px;font-weight:600;color:var(--txt2)">TOTAL</td>
+        <td style="padding:13px 14px;font-size:15px;font-weight:800;color:var(--grn);font-family:'Syne',sans-serif">${fmtMoeda(total)}</td>
+      </tr></tfoot>
+    </table></div>`;
+  }
+
+  // Aptidão
+  let aptHtml='';
+  if(e.status==='analyzed'){
+    aptHtml=`<div class="mini-card" style="margin-bottom:18px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+        <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700">Relatório de Aptidão — ${emp?emp.fantasia:'Empresa'}</div>
+        ${aptidaoBadge(e.aptidao)}
+      </div>
+      <div class="apt-row">
+        <div class="apt-item ok"><div class="apt-icon">⚖️</div><div class="apt-label">Jurídica</div><div class="apt-status">Apto</div></div>
+        <div class="apt-item ${e.aptidao==='apto'?'ok':'warn'}"><div class="apt-icon">💰</div><div class="apt-label">Fiscal</div><div class="apt-status">${e.aptidao==='apto'?'Apto':'Atenção'}</div></div>
+        <div class="apt-item ok"><div class="apt-icon">👷</div><div class="apt-label">Trabalhista</div><div class="apt-status">Apto</div></div>
+        <div class="apt-item ok"><div class="apt-icon">📈</div><div class="apt-label">Econômica</div><div class="apt-status">Apto</div></div>
+        <div class="apt-item ok"><div class="apt-icon">🏆</div><div class="apt-label">Técnica</div><div class="apt-status">Apto</div></div>
+      </div>
+    </div>`;
+  }
+
+  // Requisitos chips
+  let reqHtml='';
+  if(e.requisitos&&e.requisitos.length>0){
+    reqHtml=`<div class="field" style="margin-bottom:14px"><label>Requisitos de Habilitação</label><div class="chips">${e.requisitos.map(r=>`<span class="chip">${r}</span>`).join('')}</div></div>`;
+  }
+
+  // Alertas lado direito
+  const alertsHtml=e.alertas&&e.alertas.length>0?e.alertas.map(a=>`
+    <div class="al-item ${a.tipo}"><div class="al-icon">${alertIcon(a.tipo)}</div><div class="al-text">${a.msg}</div></div>`).join('')
+    :'<div style="font-size:12px;color:var(--txt3)">Nenhum alerta identificado</div>';
+
+  // Checklist
+  const docs=STATE.documentos.filter(d=>d.empresaId===e.empresaId);
+  const docTipos=docs.map(d=>d.tipo.toLowerCase());
+  const ckItems=(e.requisitos||[]).map(r=>{
+    const found=docTipos.some(t=>r.toLowerCase().split(' ').some(w=>w.length>4&&t.includes(w)));
+    return `<div class="ck-item ${found?'done':''}" onclick="this.classList.toggle('done');this.querySelector('.ck-box').textContent=this.classList.contains('done')?'✓':''">
+      <div class="ck-box">${found?'✓':''}</div><div class="ck-label" style="font-size:12.5px">${r}</div></div>`;
+  }).join('');
+  const done=e.requisitos?(e.requisitos.filter(r=>docTipos.some(t=>r.toLowerCase().split(' ').some(w=>w.length>4&&t.includes(w))))).length:0;
+  const total=e.requisitos?e.requisitos.length:0;
+  const pct=total>0?Math.round(done/total*100):0;
+
+  document.getElementById('edital-detail-content').innerHTML=`
+    ${aptHtml}
+    <div class="ai-banner">
+      <div style="font-size:22px">🤖</div>
+      <div style="flex:1">
+        <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;margin-bottom:2px">Dados extraídos automaticamente pela IA</div>
+        <div style="font-size:12.5px;color:var(--txt2)">Verifique e edite os valores antes de gerar a proposta</div>
+      </div>
+      <span class="badge bg" style="font-size:11px">✓ ${e.status==='analyzed'?'Analisado':'Analisando…'}</span>
+    </div>
+    <div class="two-col">
+      <div>
+        <div class="card" style="margin-bottom:18px">
+          <div class="card-header">
+            <div style="font-size:20px">🏛️</div>
+            <div><div class="card-title">${e.modalidade} nº ${e.numero}</div><div style="font-size:12px;color:var(--txt2)">${e.orgao} · Proc. ${e.processo}</div></div>
+            <span class="modality">${e.modalidade.split(' ')[0]}</span>
+          </div>
+          <div class="card-body">
+            <div class="form-row cols2" style="gap:12px">
+              <div class="field"><label>Data de Abertura</label><div style="font-size:13.5px;color:var(--grn)">${fmtDate(e.abertura)}</div></div>
+              <div class="field"><label>Data de Encerramento</label><div style="font-size:13.5px;color:${isUrgent(e.encerramento)?'var(--red)':'inherit'}">${fmtDate(e.encerramento)}</div></div>
+              <div class="field" style="grid-column:1/-1"><label>Objeto</label><div style="font-size:13.5px">${e.objeto||'—'}</div></div>
+            </div>
+            ${reqHtml}
+          </div>
+        </div>
+        ${itemsHtml}
+      </div>
+      <div class="side-panel">
+        <div class="mini-card">
+          <div class="mini-title">🚨 Alertas do Edital</div>
+          <div class="alert-list">${alertsHtml}</div>
+        </div>
+        <div class="mini-card">
+          <div class="mini-title">✅ Checklist de Habilitação</div>
+          <div class="prog-wrap"><div class="prog-label"><span>Progresso</span><span style="color:var(--grn)">${done}/${total} · ${pct}%</span></div><div class="prog-bar"><div class="prog-fill" style="width:${pct}%"></div></div></div>
+          <div class="ck-list" style="margin-top:10px">${ckItems||'<div style="font-size:12px;color:var(--txt3)">Sem requisitos identificados</div>'}</div>
+        </div>
+        <div class="mini-card">
+          <div class="mini-title">🔗 Ações Rápidas</div>
+          <div style="display:flex;flex-direction:column;gap:7px">
+            <button class="btn btn-primary btn-sm" style="width:100%;justify-content:center" onclick="showPage('propostas')">📄 Gerar Proposta PDF</button>
+            <button class="btn btn-ghost btn-sm" style="width:100%;justify-content:center" onclick="showDocSub2()">🤖 Analisar Conformidade</button>
+            <button class="btn btn-ghost btn-sm" style="width:100%;justify-content:center" onclick="exportarPropostaExcel()">📊 Exportar Excel</button>
+            <button class="btn btn-ghost btn-sm" style="width:100%;justify-content:center" onclick="gerarDeclaracao('unificada')">📜 Gerar Declarações</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+
+  showPage('edital-detail');
+}
+
+function showDocSub2(){ showPage('documentos'); setTimeout(()=>showDocSub('analise'),100); }
+
+function updateItemValue(editalId, itemN, val){
+  const e=getEdital(editalId);
+  if(!e) return;
+  const item=e.items.find(i=>i.n===itemN);
+  if(item){ item.proposto=parseFloat(val.replace(/[^\d,]/g,'').replace(',','.'))||0; }
+}
+
+function exportExcel(){ notify('Planilha Excel gerada e pronta para download!','success'); }
+function gerarDeclaracoes(){ notify('Declarações unificadas geradas em PDF!','success'); }
+
+// ─────────────────── DOCUMENTOS ───────────────────
+let currentDocFilter='all';
+
+function renderDocsEmpresaSelect(){
+  const sel=document.getElementById('docs-empresa-select');
+  sel.innerHTML=STATE.empresas.map(e=>`<option value="${e.id}">${e.fantasia||e.razao}</option>`).join('');
+}
+
+function renderDocsTable(){
+  const empresaId=parseInt(document.getElementById('docs-empresa-select').value)||STATE.empresas[0]?.id;
+  let docs=STATE.documentos.filter(d=>d.empresaId===empresaId);
+  if(currentDocFilter!=='all') docs=docs.filter(d=>d.categoria===currentDocFilter);
+  const tbody=document.getElementById('docs-tbody');
+  if(!tbody) return;
+  if(docs.length===0){ tbody.innerHTML='<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--txt3)">Nenhum documento encontrado</td></tr>'; return; }
+  tbody.innerHTML=docs.map(d=>{
+    const catBadge={'juridica':'<span class="badge bb">Jurídica</span>','fiscal':'<span class="badge ba">Fiscal</span>','trabalhista':'<span class="badge br">Trabalhista</span>','economica':'<span class="badge bpu">Econômica</span>','tecnica':'<span class="badge ba">Técnica</span>'}[d.categoria]||'';
+    const vencido=d.validade&&new Date(d.validade)<new Date();
+    const statusBadgeDoc=vencido?'<span class="badge br"><span class="bdot"></span>Vencida</span>':'<span class="badge bg"><span class="bdot"></span>Válido</span>';
+    const validadeStr=d.validade?`<span style="color:${vencido?'var(--red)':'inherit'}">${fmtDate(d.validade)}${vencido?' — Vencida':''}</span>`:'<span style="color:var(--grn)">Sem validade</span>';
+    return `<tr>
+      <td><div style="display:flex;align-items:center;gap:9px">
+        <div style="width:32px;height:32px;background:rgba(37,99,235,.1);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px">📄</div>
+        <div><div style="font-size:13px;font-weight:500">${d.nome}</div><div style="font-size:11px;color:var(--txt3)">${d.tamanho}</div></div>
+      </div></td>
+      <td>${catBadge}</td>
+      <td style="font-size:12.5px">${d.tipo}</td>
+      <td style="font-size:12.5px;color:var(--txt2)">${d.enviado}</td>
+      <td style="font-size:12.5px">${validadeStr}</td>
+      <td>${statusBadgeDoc}</td>
+      <td onclick="event.stopPropagation()">
+        <div style="display:flex;gap:5px">
+          ${vencido?`<button class="btn btn-ghost btn-sm" style="color:var(--amb)" onclick="notify('Acesse o portal do governo para renovar.','info')">Renovar</button>`:`<button class="btn-icon btn-sm" onclick="downloadDoc(${d.id})" title="Baixar arquivo">⬇️</button>`}
+          <button class="btn-icon btn-sm" onclick="deleteDoc(${d.id})">🗑️</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function filterDocs(cat,el){
+  currentDocFilter=cat;
+  document.querySelectorAll('#subpage-repo .tab').forEach(t=>t.classList.remove('active'));
+  if(el) el.classList.add('active');
+  renderDocsTable();
+}
+
+function downloadDoc(id){
+  const doc=STATE.documentos.find(d=>d.id===id);
+  if(!doc){ notify('Documento não encontrado.','error'); return; }
+  if(!doc.fileData){ notify('Este documento foi registrado sem arquivo anexado. Faça o upload novamente para baixar.','info'); return; }
+  const a=document.createElement('a');
+  a.href=doc.fileData;
+  a.download=doc.nome;
+  a.click();
+  notify(`⬇️ Baixando ${doc.nome}…`,'success');
+}
+
+// ─── Relatório de Conformidade PDF ───
+function gerarRelatorioConformidadePDF(){
+  if(typeof window.jspdf==='undefined'){ notify('Aguarde… carregando biblioteca PDF.','info'); return; }
+  // Pegar edital atual em foco (viewEdital seta STATE._currentEditalId)
+  const editalId=STATE._currentEditalId;
+  const e=editalId?getEdital(editalId):STATE.editais[0];
+  if(!e){ notify('Nenhum edital selecionado para o relatório.','error'); return; }
+  const emp=getEmpresa(e.empresaId);
+  if(!emp){ notify('Empresa não encontrada.','error'); return; }
+
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'p',unit:'mm',format:'a4'});
+  const W=210; const M=20;
+  const hoje=new Date().toLocaleDateString('pt-BR');
+
+  // Header
+  doc.setFillColor(30,58,138); doc.rect(0,0,W,30,'F');
+  doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(14);
+  doc.text('RELATÓRIO DE CONFORMIDADE DOCUMENTAL',W/2,13,{align:'center'});
+  doc.setFont('helvetica','normal'); doc.setFontSize(9);
+  doc.text(`${emp.razao} · CNPJ ${emp.cnpj}`,W/2,21,{align:'center'});
+  doc.text(`Gerado em ${hoje} pelo LicitaX`,W/2,27,{align:'center'});
+
+  // Edital info
+  doc.setFillColor(248,250,252); doc.rect(0,30,W,18,'F');
+  doc.setTextColor(30,41,59); doc.setFont('helvetica','bold'); doc.setFontSize(10);
+  doc.text(`${e.modalidade} nº ${e.numero}`,M,40);
+  doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(100,116,139);
+  doc.text(`${e.orgao} · Abertura: ${fmtDate(e.abertura)}`,M,46);
+
+  let y=58;
+  const docs=STATE.documentos.filter(d=>d.empresaId===e.empresaId);
+  const reqs=e.requisitos||[];
+
+  // Summary boxes
+  const validos=docs.filter(d=>d.status==='valido').length;
+  const vencidos=docs.filter(d=>d.status==='vencido').length;
+  const total=docs.length;
+  const caixas=[
+    {label:'Total de Docs',val:total,cor:[30,58,138]},
+    {label:'Válidos',val:validos,cor:[16,185,129]},
+    {label:'Vencidos',val:vencidos,cor:[239,68,68]},
+    {label:'Aptidão',val:e.aptidao==='apto'?'APTO':e.aptidao==='inapto'?'INAPTO':'—',cor:e.aptidao==='apto'?[16,185,129]:[239,68,68]},
+  ];
+  const bw=38, gap=4, bStart=M;
+  caixas.forEach((c,i)=>{
+    const bx=bStart+i*(bw+gap);
+    doc.setFillColor(...c.cor); doc.roundedRect(bx,y,bw,18,2,2,'F');
+    doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(16);
+    doc.text(String(c.val),bx+bw/2,y+11,{align:'center'});
+    doc.setFont('helvetica','normal'); doc.setFontSize(7.5);
+    doc.text(c.label,bx+bw/2,y+16,{align:'center'});
+  });
+  y+=26;
+
+  // Docs table
+  doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(30,41,59);
+  doc.text('DOCUMENTOS CADASTRADOS',M,y); y+=6;
+
+  // Table header
+  doc.setFillColor(30,58,138);
+  doc.rect(M,y,W-M*2,7,'F');
+  doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(8);
+  doc.text('Documento',M+2,y+4.8);
+  doc.text('Categoria',M+80,y+4.8);
+  doc.text('Validade',M+120,y+4.8);
+  doc.text('Status',M+148,y+4.8);
+  y+=7;
+
+  docs.forEach((d,i)=>{
+    if(y>270){ doc.addPage(); y=20; }
+    const bg = i%2===0 ? [248,250,252] : [255,255,255];
+    doc.setFillColor(...bg); doc.rect(M,y,W-M*2,7,'F');
+    doc.setTextColor(30,41,59); doc.setFont('helvetica','normal'); doc.setFontSize(8);
+    const nomeShort=d.nome.length>35?d.nome.slice(0,33)+'…':d.nome;
+    doc.text(nomeShort,M+2,y+4.8);
+    doc.text(d.categoria||'—',M+80,y+4.8);
+    doc.text(d.validade||'Sem validade',M+120,y+4.8);
+    // Status
+    if(d.status==='vencido'){ doc.setTextColor(239,68,68); doc.setFont('helvetica','bold'); }
+    else { doc.setTextColor(16,185,129); doc.setFont('helvetica','bold'); }
+    doc.text(d.status==='vencido'?'VENCIDO':'VÁLIDO',M+148,y+4.8);
+    y+=7;
+  });
+
+  if(docs.length===0){
+    doc.setTextColor(150,160,170); doc.setFont('helvetica','normal'); doc.setFontSize(9);
+    doc.text('Nenhum documento cadastrado para esta empresa.',M+2,y+4.8);
+    y+=10;
+  }
+
+  // Requisitos do edital
+  if(reqs.length>0){
+    y+=8;
+    if(y>265){ doc.addPage(); y=20; }
+    doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(30,41,59);
+    doc.text('REQUISITOS DO EDITAL',M,y); y+=6;
+    reqs.forEach((r,i)=>{
+      if(y>270){ doc.addPage(); y=20; }
+      const bg=i%2===0?[248,250,252]:[255,255,255];
+      doc.setFillColor(...bg); doc.rect(M,y,W-M*2,7,'F');
+      doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(30,41,59);
+      doc.text((r.nome||r).length>50?(r.nome||r).slice(0,48)+'…':(r.nome||r),M+2,y+4.8);
+      const status=r.status||'pendente';
+      if(status==='ok'){ doc.setTextColor(16,185,129); doc.setFont('helvetica','bold'); doc.text('✓ OK',M+148,y+4.8); }
+      else if(status==='falha'){ doc.setTextColor(239,68,68); doc.setFont('helvetica','bold'); doc.text('✗ FALTA',M+148,y+4.8); }
+      else { doc.setTextColor(245,158,11); doc.setFont('helvetica','bold'); doc.text('— PENDENTE',M+148,y+4.8); }
+      y+=7;
+    });
+  }
+
+  // Rodapé
+  const pages=doc.internal.getNumberOfPages();
+  for(let i=1;i<=pages;i++){
+    doc.setPage(i); doc.setFontSize(7); doc.setTextColor(180,190,200);
+    doc.text(`LicitaX · ${emp.razao} · Relatório de Conformidade · ${hoje}`,W/2,290,{align:'center'});
+  }
+
+  doc.save(`Relatorio_Conformidade_${e.modalidade.replace(/ /g,'_')}_${e.numero.replace(/\//g,'-')}.pdf`);
+  notify('✅ Relatório de Conformidade gerado!','success');
+}
+
+// ─── Enviar por E-mail ───
+function enviarEmailEdital(){
+  const editalId=STATE._currentEditalId;
+  const e=editalId?getEdital(editalId):STATE.editais[0];
+  if(!e){ notify('Nenhum edital selecionado.','error'); return; }
+  const emp=getEmpresa(e.empresaId);
+  const hoje=new Date().toLocaleDateString('pt-BR');
+  const docs=STATE.documentos.filter(d=>d.empresaId===e.empresaId);
+  const validos=docs.filter(d=>d.status==='valido').length;
+  const vencidos=docs.filter(d=>d.status==='vencido').length;
+
+  const assunto=encodeURIComponent(`[LicitaX] Conformidade Documental — ${e.modalidade} nº ${e.numero}`);
+  const corpo=encodeURIComponent(
+`Resumo de Conformidade Documental — Gerado pelo LicitaX em ${hoje}
+
+EDITAL
+Modalidade: ${e.modalidade} nº ${e.numero}
+Órgão: ${e.orgao}
+Abertura: ${fmtDate(e.abertura)}
+Objeto: ${e.objeto||'—'}
+
+EMPRESA
+${emp?.razao||'—'} · CNPJ: ${emp?.cnpj||'—'}
+
+DOCUMENTAÇÃO
+Documentos válidos: ${validos}
+Documentos vencidos: ${vencidos}
+Aptidão: ${e.aptidao==='apto'?'APTO':e.aptidao==='inapto'?'INAPTO':'A verificar'}
+
+---
+Enviado pelo LicitaX — Sistema de Gestão de Licitações`);
+
+  const dest=emp?.email||'';
+  window.location.href=`mailto:${dest}?subject=${assunto}&body=${corpo}`;
+  notify('📧 Abrindo cliente de e-mail…','info');
+}
+
+function deleteDoc(id){
+  STATE.documentos=STATE.documentos.filter(d=>d.id!==id);
+  renderDocsTable();
+  notify('Documento removido.','info');
+}
+
+function openDocUploadModal(){
+  const sel=document.getElementById('doc-empresa-sel');
+  sel.innerHTML=STATE.empresas.map(e=>`<option value="${e.id}">${e.fantasia||e.razao}</option>`).join('');
+  document.getElementById('doc-upload-title').textContent='Clique para selecionar o arquivo';
+  document.getElementById('doc-validade').value='';
+  openModal('modal-doc-upload');
+}
+
+function handleDocFileSelect(input){
+  if(input.files&&input.files[0]) document.getElementById('doc-upload-title').textContent='📎 '+input.files[0].name;
+}
+
+function saveDoc(){
+  const empresaId=parseInt(document.getElementById('doc-empresa-sel').value);
+  const categoria=document.getElementById('doc-categoria').value;
+  const tipo=document.getElementById('doc-tipo').value;
+  const validade=document.getElementById('doc-validade').value||null;
+  const fi=document.getElementById('doc-file-input');
+  const file=fi.files&&fi.files[0]?fi.files[0]:null;
+  const nome=file?file.name:`${tipo.replace(/ /g,'_')}_${Date.now()}.pdf`;
+  const tamanho=file?(file.size>1024*1024?(file.size/1024/1024).toFixed(1)+'MB':(file.size/1024).toFixed(0)+'KB'):'—';
+  const vencido=validade&&new Date(validade)<new Date();
+  const hoje=new Date();
+  const day=String(hoje.getDate()).padStart(2,'0'),mon=String(hoje.getMonth()+1).padStart(2,'0'),yr=hoje.getFullYear();
+  const docObj={id:genId(),empresaId,categoria,tipo,nome,tamanho,enviado:`${day}/${mon}/${yr}`,validade,status:vencido?'vencido':'valido',fileType:file?file.type:null};
+  if(file&&file.size<=10*1024*1024){
+    const reader=new FileReader();
+    reader.onload=ev=>{
+      docObj.fileData=ev.target.result;
+      STATE.documentos.push(docObj);
+      closeModal('modal-doc-upload');
+      notify('Documento enviado com sucesso!','success');
+      renderDocsTable();
+      saveState();
+    };
+    reader.readAsDataURL(file);
+  } else {
+    STATE.documentos.push(docObj);
+    closeModal('modal-doc-upload');
+    notify(file?'Arquivo >10MB não armazenado localmente — metadados salvos.':'Documento registrado sem arquivo.','info');
+    renderDocsTable();
+    saveState();
+  }
+}
+
+function showDocSub(name){
+  document.getElementById('subpage-repo').style.display=name==='repositorio'?'block':'none';
+  document.getElementById('subpage-analise').style.display=name==='analise'?'block':'none';
+  const r=document.getElementById('dsub-repositorio'),a=document.getElementById('dsub-analise');
+  if(name==='repositorio'){ r.style.borderBottomColor='var(--acc2)';r.style.color='var(--acc2)';a.style.borderBottomColor='transparent';a.style.color='var(--txt2)'; }
+  else { a.style.borderBottomColor='var(--acc2)';a.style.color='var(--acc2)';r.style.borderBottomColor='transparent';r.style.color='var(--txt2)'; }
+}
+
+function renderAnaliseEditalSelect(){
+  const sel=document.getElementById('analise-edital-select');
+  const analyzed=STATE.editais.filter(e=>e.status==='analyzed');
+  sel.innerHTML='<option value="">— Selecionar edital —</option>'+analyzed.map(e=>`<option value="${e.id}">${e.modalidade} nº ${e.numero} — ${e.orgao}</option>`).join('');
+  if(STATE.currentEditalId){ sel.value=STATE.currentEditalId; }
+}
+
+function runAnalysis(){
+  const sel=document.getElementById('analise-edital-select');
+  if(!sel.value){ sel.style.borderColor='var(--red)'; setTimeout(()=>sel.style.borderColor='',1500); notify('Selecione um edital.','error'); return; }
+  const edital=getEdital(parseInt(sel.value));
+  if(!edital) return;
+  document.getElementById('analise-empty').style.display='none';
+  document.getElementById('analise-results').style.display='none';
+  document.getElementById('analise-loading').style.display='block';
+  const steps=['Lendo requisitos do edital…','Inventariando documentos da empresa…','Verificando validades e conformidades…','Identificando lacunas e riscos…'];
+  const stepsEl=document.getElementById('analise-steps');
+  stepsEl.innerHTML=steps.map(s=>`<div style="opacity:.3">✓ ${s}</div>`).join('');
+  const divs=stepsEl.querySelectorAll('div');
+  steps.forEach((_,i)=>setTimeout(()=>{ divs[i].style.opacity='1'; divs[i].style.color='var(--grn)'; },500+i*700));
+  setTimeout(()=>{ document.getElementById('analise-loading').style.display='none'; renderAnaliseResults(edital); },3500);
+}
+
+function renderAnaliseResults(e){
+  const emp=getEmpresa(e.empresaId);
+  const docs=STATE.documentos.filter(d=>d.empresaId===e.empresaId);
+  const docTipos=docs.map(d=>({tipo:d.tipo,cat:d.categoria,status:d.status,validade:d.validade,nome:d.nome}));
+
+  const reqs=e.requisitos||[];
+  let ok=0,warn=0,fail=0;
+
+  const reqItems=reqs.map(r=>{
+    const found=docTipos.find(d=>r.toLowerCase().split(' ').some(w=>w.length>4&&d.tipo.toLowerCase().includes(w)));
+    const vencido=found&&found.validade&&new Date(found.validade)<new Date();
+    let st='ok',stLabel='✓ Conforme',stClass='bg';
+    if(!found){ st='fail';stLabel='❌ Não Encontrado';stClass='br'; fail++; }
+    else if(vencido){ st='fail';stLabel='❌ Vencida';stClass='br'; fail++; }
+    else { ok++; }
+    const barColor=st==='ok'?'var(--grn)':st==='warn'?'var(--amb)':'var(--red)';
+    const bgColor=st==='ok'?'var(--grn2)':st==='warn'?'var(--amb2)':'var(--red2)';
+    const detail=found?`<div style="display:flex;gap:20px;flex-wrap:wrap;font-size:12.5px">
+      <div><div style="font-size:10.5px;color:var(--txt3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:3px">Documento</div><div style="font-weight:500">${found.nome}</div></div>
+      <div><div style="font-size:10.5px;color:var(--txt3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:3px">Validade</div><div style="color:${vencido?'var(--red)':'var(--grn)'}">${found.validade?fmtDate(found.validade)+(vencido?' — VENCIDA':''):'Sem validade'}</div></div>
+      <div style="flex:1"><div style="font-size:10.5px;color:var(--txt3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:3px">Status</div><div style="color:${vencido?'var(--red)':'var(--grn)'}">${vencido?'Documento expirado — necessário renovar antes da abertura.':'Documento válido e conforme.'}</div></div>
+    </div>${vencido?`<div style="margin-top:10px;display:flex;gap:7px"><button class="btn btn-primary btn-sm" onclick="notify('Abrindo portal…','info')">🔗 Portal Gov</button><button class="btn btn-ghost btn-sm" onclick="openDocUploadModal()">⬆️ Substituir</button></div>`:''}`:
+    `<div style="font-size:12.5px;color:var(--red);margin-bottom:10px">Nenhum documento deste tipo encontrado no repositório da empresa.</div>
+    <div style="display:flex;gap:7px"><button class="btn btn-primary btn-sm" onclick="openDocUploadModal()">⬆️ Enviar Documento</button></div>`;
+
+    return `<div class="req-item" style="border-color:${st==='ok'?'var(--bord)':st==='warn'?'rgba(245,158,11,.25)':'rgba(239,68,68,.3)'}">
+      <div class="req-header" onclick="toggleReq(this)">
+        <div class="req-bar" style="background:${barColor}"></div>
+        <div class="req-inner">
+          <div style="width:26px;height:26px;border-radius:6px;background:${bgColor};display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0">${st==='ok'?'✅':st==='warn'?'⚠️':'❌'}</div>
+          <div style="flex:1"><div style="font-size:13px;font-weight:500">${r}</div></div>
+          <span class="badge ${stClass}" style="flex-shrink:0">${stLabel}</span>
+          <span class="req-chevron">▾</span>
+        </div>
+      </div>
+      <div class="req-detail" style="background:${bgColor.replace(')',',0.5)').replace('rgba','rgba')}">
+        ${detail}
+      </div>
+    </div>`;
+  }).join('');
+
+  const total=reqs.length||1;
+  const pct=Math.round(ok/total*100);
+  const statusLabel=fail>0?'<span class="badge ba">⚠️ Restrições</span>':'<span class="badge bg">✅ Conforme</span>';
+
+  document.getElementById('analise-results').innerHTML=`
+    <div class="mini-card" style="margin-bottom:18px">
+      <div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap">
+        <div style="text-align:center">
+          <div style="font-family:'Syne',sans-serif;font-size:38px;font-weight:800;line-height:1;color:${fail>0?'var(--amb)':'var(--grn)'}">${ok}/${total}</div>
+          <div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.7px;margin-top:3px">Requisitos OK</div>
+        </div>
+        <div style="flex:1;min-width:200px">
+          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px"><span style="color:var(--txt2)">Conformidade — ${e.orgao}</span><span style="font-weight:600;color:${fail>0?'var(--amb)':'var(--grn)'}">${pct}%</span></div>
+          <div class="prog-bar" style="height:9px"><div class="prog-fill" style="width:${pct}%;background:${fail>0?'linear-gradient(90deg,var(--amb),#f97316)':'linear-gradient(90deg,var(--acc),var(--grn))'}"></div></div>
+          <div style="display:flex;gap:14px;margin-top:8px;font-size:11.5px">
+            <span style="color:var(--grn)">✅ ${ok} OK</span>
+            <span style="color:var(--red)">❌ ${fail} Pendentes</span>
+          </div>
+        </div>
+        <div>${statusLabel}</div>
+        <button class="btn btn-ghost btn-sm" onclick="runAnalysis()">↺ Reanalisar</button>
+      </div>
+    </div>
+    <div class="two-col" style="grid-template-columns:1fr 280px">
+      <div>
+        <div class="sh"><div class="sh-title">🔎 Requisito por Requisito</div></div>
+        ${reqs.length>0?reqItems:'<div style="padding:20px;text-align:center;color:var(--txt3)">Este edital não possui requisitos cadastrados.</div>'}
+      </div>
+      <div class="side-panel">
+        <div class="mini-card">
+          <div class="mini-title">🎯 Ações Necessárias</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            ${fail>0?`<div style="padding:9px 11px;background:var(--red2);border:1px solid rgba(239,68,68,.2);border-radius:8px;font-size:12px"><div style="font-weight:700;color:var(--red);margin-bottom:3px">🚨 ${fail} documento(s) pendente(s)</div>Regularize antes da data de abertura.</div>`:''}
+            <div style="padding:9px 11px;background:var(--grn2);border:1px solid rgba(16,185,129,.2);border-radius:8px;font-size:12px"><div style="font-weight:700;color:var(--grn);margin-bottom:3px">✅ ${ok} conforme(s)</div>Prontos para o processo.</div>
+          </div>
+        </div>
+        <div class="mini-card">
+          <div class="mini-title">📋 Exportar Relatório</div>
+          <div style="display:flex;flex-direction:column;gap:7px">
+            <button class="btn btn-primary btn-sm" style="width:100%;justify-content:center" onclick="gerarRelatorioConformidadePDF()">⬇️ Relatório PDF</button>
+            <button class="btn btn-ghost btn-sm" style="width:100%;justify-content:center" onclick="enviarEmailEdital()">📧 Enviar por E-mail</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  document.getElementById('analise-results').style.display='block';
+}
+
+function toggleReq(headerEl){
+  const item=headerEl.closest('.req-item');
+  const detail=item.querySelector('.req-detail');
+  const chev=headerEl.querySelector('.req-chevron');
+  const open=detail.style.display==='block';
+  detail.style.display=open?'none':'block';
+  if(chev) chev.textContent=open?'▾':'▸';
+}
+
+// ─────────────────── PROPOSTAS ───────────────────
+function renderPropostaEmpresaSelect(){
+  const sel=document.getElementById('prop-empresa-sel');
+  sel.innerHTML=STATE.empresas.map(e=>`<option value="${e.id}">${e.fantasia||e.razao}</option>`).join('');
+}
+
+function renderPropostaEditalSelect(){
+  const sel=document.getElementById('proposta-edital-select');
+  const analyzed=STATE.editais.filter(e=>e.status==='analyzed');
+  sel.innerHTML='<option value="">— Selecionar edital —</option>'+analyzed.map(e=>`<option value="${e.id}" ${e.id===STATE.currentEditalId?'selected':''}>${e.modalidade} nº ${e.numero} — ${e.orgao}</option>`).join('');
+}
+
+function renderProposal(){
+  const edId=parseInt(document.getElementById('proposta-edital-select')?.value)||STATE.currentEditalId;
+  const empId=parseInt(document.getElementById('prop-empresa-sel')?.value)||STATE.empresas[0]?.id;
+  const e=getEdital(edId);
+  const emp=getEmpresa(empId)||STATE.empresas[0];
+  const resp=document.getElementById('prop-responsavel')?.value||'Responsável';
+  const cargo=document.getElementById('prop-cargo')?.value||'Cargo';
+  const validade=document.getElementById('prop-validade')?.value||'60 dias';
+  const hoje=new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'});
+  const preview=document.getElementById('proposal-preview');
+  if(!preview) return;
+  if(!e||!emp){ preview.innerHTML='<div style="padding:32px;text-align:center;color:var(--txt3)">Selecione um edital analisado para gerar a proposta.</div>'; return; }
+
+  let total=0;
+  const rows=(e.items||[]).map(it=>{ const t=it.proposto*it.qtd; total+=t; return `<tr style="border-bottom:1px solid #e5e7eb"><td style="padding:7px;color:#6b7280;font-size:11.5px">${String(it.n).padStart(2,'0')}</td><td style="padding:7px;font-size:12px">${it.desc}</td><td style="padding:7px;text-align:center;font-size:12px">${it.un}</td><td style="padding:7px;text-align:center;font-size:12px">${it.qtd}</td><td style="padding:7px;text-align:right;font-size:12px">${fmtMoeda(it.proposto)}</td><td style="padding:7px;text-align:right;font-size:12px;font-weight:600">${fmtMoeda(t)}</td></tr>`;}).join('');
+
+  preview.innerHTML=`<div class="proposal-wrap">
+    <div style="background:#1e3a8a;padding:18px 24px;display:flex;align-items:center;justify-content:space-between">
+      <div style="display:flex;align-items:center;gap:11px">
+        <div style="width:44px;height:44px;background:white;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;overflow:hidden">${emp.logoData?`<img src="${emp.logoData}" style="width:100%;height:100%;object-fit:contain">`:emp.logo}</div>
+        <div style="color:white"><div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800">${emp.razao}</div><div style="font-size:10.5px;opacity:.7">CNPJ: ${emp.cnpj}</div></div>
+      </div>
+      <div style="text-align:right;color:white;font-size:10.5px;opacity:.8"><div>${emp.endereco}</div><div>${emp.telefone} · ${emp.email}</div></div>
+    </div>
+    <div style="padding:16px 24px;border-bottom:2px solid #e5e7eb;text-align:center">
+      <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:#1e3a8a">Proposta Comercial</div>
+      <div style="font-size:11.5px;color:#6b7280;margin-top:3px">${e.modalidade} nº ${e.numero} · ${e.orgao}</div>
+    </div>
+    <div style="padding:18px 24px;color:#1a1a1a">
+      <div style="font-size:12px;color:#374151;line-height:1.7;margin-bottom:14px">Prezados Senhores,<br><br>A empresa <strong>${emp.razao}</strong>, inscrita no CNPJ sob o nº ${emp.cnpj}, vem apresentar sua proposta comercial para o objeto do ${e.modalidade} nº ${e.numero}.</div>
+      <table style="width:100%;border-collapse:collapse;margin-bottom:14px;font-size:12px">
+        <thead><tr style="background:#1e3a8a;color:white"><th style="padding:7px;text-align:left">Item</th><th style="padding:7px;text-align:left">Descrição</th><th style="padding:7px;text-align:center">Un.</th><th style="padding:7px;text-align:center">Qtd.</th><th style="padding:7px;text-align:right">Vl. Unit.</th><th style="padding:7px;text-align:right">Total</th></tr></thead>
+        <tbody>${rows||'<tr><td colspan="6" style="padding:12px;text-align:center;color:#6b7280">Sem itens cadastrados</td></tr>'}</tbody>
+        <tfoot><tr style="background:#f0fdf4"><td colspan="4"></td><td style="padding:9px 7px;font-weight:700;color:#1e3a8a;text-align:right">TOTAL GERAL</td><td style="padding:9px 7px;font-weight:800;color:#1e3a8a;text-align:right;font-size:14px">${fmtMoeda(total)}</td></tr></tfoot>
+      </table>
+      <div style="font-size:11px;color:#6b7280;margin-bottom:18px">Validade da proposta: <strong>${validade}</strong> · Prazo de início: <strong>10 dias úteis após a Ordem de Serviço</strong></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px">
+        <div style="text-align:center"><div style="border-top:1px solid #9ca3af;padding-top:5px;font-size:11px;color:#374151"><div style="font-weight:600">${resp}</div><div style="color:#6b7280">${cargo} · ${emp.cnpj}</div></div></div>
+        <div style="text-align:center"><div style="font-size:11px;color:#9ca3af;margin-bottom:18px">Carimbo da Empresa</div><div style="border-top:1px solid #9ca3af;padding-top:5px;font-size:11px;color:#6b7280">${emp.fantasia||emp.razao}, ${hoje}</div></div>
+      </div>
+    </div>
+    <div style="background:#f8fafc;border-top:1px solid #e5e7eb;padding:9px 24px;font-size:10px;color:#9ca3af;display:flex;justify-content:space-between">
+      <span>${emp.razao} · CNPJ ${emp.cnpj}</span><span>${emp.endereco}</span>
+    </div>
+  </div>`;
+}
+
+// ─────────────────── ALERTAS ───────────────────
+function renderAlertas(){
+  const c=document.getElementById('alertas-content');
+  if(STATE.alertas.length===0){ c.innerHTML='<div style="text-align:center;padding:48px;color:var(--txt3)"><div style="font-size:36px;margin-bottom:12px">🔔</div><div>Nenhum alerta ativo</div></div>'; return; }
+  c.innerHTML=`<div style="display:flex;flex-direction:column;gap:10px;max-width:720px">`+STATE.alertas.map(a=>{
+    const e=a.editalId?getEdital(a.editalId):null;
+    return `<div class="al-item ${a.tipo}" style="padding:14px 16px;border-radius:var(--r);font-size:13px;${a.lido?'opacity:.5':''}">
+      <div class="al-icon" style="font-size:20px">${alertIcon(a.tipo)}</div>
+      <div style="flex:1">
+        <div style="font-weight:700;margin-bottom:3px;font-size:13.5px">${a.titulo}</div>
+        <div>${a.msg}</div>
+        ${e?`<div style="font-size:11.5px;color:var(--txt3);margin-top:4px">Edital: ${e.modalidade} nº ${e.numero} — ${e.orgao}</div>`:''}
+      </div>
+      <div style="display:flex;gap:7px;flex-shrink:0">
+        ${e?`<button class="btn btn-ghost btn-sm" onclick="viewEdital(${e.id})">Ver Edital</button>`:''}
+        <button class="btn btn-ghost btn-sm" onclick="markAlertRead(${a.id})">${a.lido?'✓ Lido':'Marcar Lido'}</button>
+      </div>
+    </div>`;
+  }).join('')+'</div>';
+}
+
+function markAlertRead(id){
+  const a=STATE.alertas.find(x=>x.id===id);
+  if(a){ a.lido=!a.lido; renderAlertas(); document.getElementById('nb-alertas').textContent=STATE.alertas.filter(x=>!x.lido).length; renderDashboard(); }
+}
+
+function markAllAlertsRead(){
+  STATE.alertas.forEach(a=>a.lido=true);
+  renderAlertas();
+  document.getElementById('nb-alertas').textContent='0';
+  renderDashboard();
+  notify('Todos os alertas marcados como lidos.','success');
+}
+
+// ─────────────────── HELPERS ───────────────────
+function updateAllSelects(){
+  // empresa selects
+  ['ned-empresa','doc-empresa-sel','docs-empresa-select','prop-empresa-sel'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.innerHTML=STATE.empresas.map(e=>`<option value="${e.id}">${e.fantasia||e.razao}</option>`).join('');
+  });
+  // edital selects
+  const analyzed=STATE.editais.filter(e=>e.status==='analyzed');
+  ['analise-edital-select','proposta-edital-select'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.innerHTML='<option value="">— Selecionar edital —</option>'+analyzed.map(e=>`<option value="${e.id}">${e.modalidade} nº ${e.numero} — ${e.orgao}</option>`).join('');
+  });
+  document.getElementById('nb-empresas').textContent=STATE.empresas.length;
+  document.getElementById('nb-editais').textContent=STATE.editais.length;
+}
+
+// ─────────────────── PERSISTÊNCIA (localStorage) ───────────────────
+function saveState(){
+  try{
+    const toSave={_version:3,empresas:STATE.empresas,editais:STATE.editais,documentos:STATE.documentos,alertas:STATE.alertas,nextId:STATE.nextId};
+    localStorage.setItem('licitax_state',JSON.stringify(toSave));
+  }catch(e){console.warn('Erro ao salvar estado:',e);}
+}
+
+function loadState(){
+  try{
+    const raw=localStorage.getItem('licitax_state');
+    if(raw){
+      const saved=JSON.parse(raw);
+      // Versão 3: limpa dados de demonstração salvos em versões anteriores
+      const VERSION=3;
+      if((saved._version||0) < VERSION){
+        localStorage.removeItem('licitax_state');
+        console.log('[LicitaX] Dados de demonstração limpos — versão atualizada.');
+        return;
+      }
+      if(saved.empresas) STATE.empresas=saved.empresas;
+      if(saved.editais)  STATE.editais=saved.editais;
+      if(saved.documentos) STATE.documentos=saved.documentos;
+      if(saved.alertas)  STATE.alertas=saved.alertas;
+      if(saved.nextId)   STATE.nextId=saved.nextId;
+    }
+  }catch(e){console.warn('Erro ao carregar estado:',e);}
+}
+
+function loadConfig(){
+  try{
+    const cfg=JSON.parse(localStorage.getItem('licitax_config')||'{}');
+    if(cfg.nome) document.getElementById('cfg-nome').value=cfg.nome;
+    if(cfg.email) document.getElementById('cfg-email').value=cfg.email;
+    if(cfg.cargo) document.getElementById('cfg-cargo').value=cfg.cargo;
+    if(cfg.apiKey){ document.getElementById('cfg-api-key').value=cfg.apiKey; STATE.apiKey=cfg.apiKey; window.LICITAX_KEY=cfg.apiKey; }
+    if(cfg.propValidade) document.getElementById('cfg-prop-validade').value=cfg.propValidade;
+    if(cfg.propPrazo) document.getElementById('cfg-prop-prazo').value=cfg.propPrazo;
+    if(cfg.propResp) document.getElementById('cfg-prop-resp').value=cfg.propResp;
+    if(cfg.propCargo) document.getElementById('cfg-prop-cargo').value=cfg.propCargo;
+    if(cfg.alertDays) document.getElementById('cfg-alert-days').value=cfg.alertDays;
+  }catch(e){}
+  updateStorageInfo();
+}
+
+function saveAllConfig(){
+  const apiKey=(document.getElementById('cfg-api-key').value||'').trim();
+  const cfg={
+    nome:document.getElementById('cfg-nome').value,
+    email:document.getElementById('cfg-email').value,
+    cargo:document.getElementById('cfg-cargo').value,
+    apiKey,
+    propValidade:document.getElementById('cfg-prop-validade').value,
+    propPrazo:document.getElementById('cfg-prop-prazo').value,
+    propResp:document.getElementById('cfg-prop-resp').value,
+    propCargo:document.getElementById('cfg-prop-cargo').value,
+    alertDays:document.getElementById('cfg-alert-days').value,
+  };
+  localStorage.setItem('licitax_config',JSON.stringify(cfg));
+  localStorage.setItem('licitax_apikey', apiKey); // backup dedicado
+  STATE.apiKey=apiKey;
+  window.LICITAX_KEY=apiKey; // variável global garantida
+  saveState();
+  notify('✅ Configurações salvas com sucesso!','success');
+  updateStorageInfo();
+}
+
+function updateStorageInfo(){
+  try{
+    const keys=['licitax_state','licitax_config','licitax_chat'];
+    let total=0;
+    const info=keys.map(k=>{
+      const v=localStorage.getItem(k)||'';
+      total+=v.length;
+      const kb=(v.length/1024).toFixed(1);
+      return `<div><span style="color:var(--txt3)">${k.replace('licitaai_','')}:</span> ${kb} KB</div>`;
+    });
+    const el=document.getElementById('cfg-storage-info');
+    if(el) el.innerHTML=info.join('')+`<div style="margin-top:4px;color:var(--grn)">Total: ${(total/1024).toFixed(1)} KB de ~5 MB disponíveis</div>`;
+  }catch(e){}
+}
+
+function toggleApiKeyVisibility(){
+  const inp=document.getElementById('cfg-api-key');
+  const btn=document.querySelector('.api-key-toggle');
+  if(inp.type==='password'){inp.type='text';btn.textContent='🙈 Ocultar';}
+  else{inp.type='password';btn.textContent='👁 Ver';}
+}
+
+function onApiKeyChange(){
+  const k=document.getElementById('cfg-api-key').value;
+  STATE.apiKey=k;
+  window.LICITAX_KEY=k;
+  document.getElementById('cfg-api-status-text').textContent='Não testada';
+  document.getElementById('cfg-api-status-text').style.color='var(--txt3)';
+}
+
+async function testApiKey(){
+  const key=document.getElementById('cfg-api-key').value.trim();
+  if(!key){notify('Cole a chave API primeiro.','error');return;}
+  const btn=document.querySelector('[onclick="testApiKey()"]');
+  btn.textContent='⏳ Testando…'; btn.disabled=true;
+  const statusEl=document.getElementById('cfg-api-status-text');
+  try{
+    const res=await fetch(WORKER_URL,{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({contents:[{parts:[{text:'Responda apenas: OK'}]}]})
+    });
+    const data=await res.json();
+    if(data.candidates?.[0]?.content?.parts?.[0]?.text){
+      statusEl.textContent='✅ Conexão OK — Gemini respondendo!'; statusEl.style.color='var(--grn)';
+      STATE.apiKey=key;
+      window.LICITAX_KEY=key;
+      notify('✅ Chave Gemini válida! IA conectada.','success');
+      document.getElementById('cfg-api-badge').className='api-status-dot ok';
+    } else {
+      statusEl.textContent='❌ '+( data.error?.message||'Erro desconhecido'); statusEl.style.color='var(--red)';
+      notify('Erro na API: '+(data.error?.message||'Verifique a chave'),'error');
+    }
+  }catch(e){
+    statusEl.textContent='❌ Erro de rede — verifique a chave'; statusEl.style.color='var(--red)';
+    notify('Erro ao conectar com a API.','error');
+  }
+  btn.textContent='🔬 Testar conexão'; btn.disabled=false;
+}
+
+function toggleSwitch(el){ el.classList.toggle('on'); }
+
+function exportData(){
+  const data={state:STATE,config:JSON.parse(localStorage.getItem('licitax_config')||'{}'),exportedAt:new Date().toISOString(),version:'2.0'};
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`licitax_backup_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  notify('📥 Dados exportados com sucesso!','success');
+}
+
+function importData(input){
+  const file=input.files[0];
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const data=JSON.parse(e.target.result);
+      if(data.state){
+        if(data.state.empresas) STATE.empresas=data.state.empresas;
+        if(data.state.editais) STATE.editais=data.state.editais;
+        if(data.state.documentos) STATE.documentos=data.state.documentos;
+        if(data.state.alertas) STATE.alertas=data.state.alertas;
+        if(data.state.nextId) STATE.nextId=data.state.nextId;
+      }
+      if(data.config) localStorage.setItem('licitax_config',JSON.stringify(data.config));
+      saveState();
+      renderDashboard();
+      notify('✅ Dados importados com sucesso!','success');
+    }catch(err){notify('Arquivo inválido. Use um backup exportado pelo LicitaX.','error');}
+  };
+  reader.readAsText(file);
+}
+
+function confirmClearData(){
+  if(confirm('⚠️ Isso apagará TODOS os dados (empresas, editais, documentos). Esta ação não pode ser desfeita.\n\nDeseja continuar?')){
+    localStorage.removeItem('licitax_state');
+    location.reload();
+  }
+}
+
+// ─────────────────── ASSISTENTE IA (Claude API) ───────────────────
+const AI_CHAT_HISTORY = [];
+
+function getAIContext(){
+  const empresas=STATE.empresas.map(e=>`- ${e.fantasia||e.razao} (CNPJ: ${e.cnpj})`).join('\n');
+  const editaisAtivos=STATE.editais.filter(e=>['analyzed','analyzing','pending'].includes(e.status));
+  const editaisInfo=editaisAtivos.map(e=>{
+    const emp=getEmpresa(e.empresaId);
+    return `- [${e.status.toUpperCase()}] ${e.modalidade} nº ${e.numero} | ${e.orgao} | Abertura: ${fmtDate(e.abertura)} | Empresa: ${emp?.fantasia||'?'} | Aptidão: ${e.aptidao||'pendente'}`;
+  }).join('\n');
+  const docsVencidos=STATE.documentos.filter(d=>d.status==='vencido').map(d=>`- ${d.tipo} (${d.nome}) — VENCIDO`).join('\n');
+  const alertasAtivos=STATE.alertas.filter(a=>!a.lido).map(a=>`- [${a.tipo.toUpperCase()}] ${a.titulo}: ${a.msg}`).join('\n');
+
+  return `Você é o assistente especializado em licitações públicas brasileiras do sistema LicitaX.
+Contexto atual do sistema (dados reais do usuário):
+
+EMPRESAS CADASTRADAS:
+${empresas||'Nenhuma'}
+
+EDITAIS ATIVOS:
+${editaisInfo||'Nenhum'}
+
+DOCUMENTOS VENCIDOS:
+${docsVencidos||'Nenhum'}
+
+ALERTAS ATIVOS:
+${alertasAtivos||'Nenhum'}
+
+Responda sempre em português brasileiro. Seja objetivo, prático e especialista. Use listas e formatação quando útil. Foque na lei 14.133/2021 e legislação vigente.`;
+}
+
+function aiQuick(msg){ document.getElementById('ai-input').value=msg; sendAIMessage(); }
+
+async function sendAIMessage(){
+  const input=document.getElementById('ai-input');
+  const msg=input.value.trim();
+  if(!msg) return;
+
+  // Append user message
+  appendChatMsg('user', msg);
+  input.value='';
+  input.style.height='';
+  document.getElementById('ai-send-btn').disabled=true;
+
+  // Show typing
+  const typingId='typing-'+Date.now();
+  const chatEl=document.getElementById('ai-chat-messages');
+  chatEl.innerHTML+=`<div class="ai-msg bot" id="${typingId}">
+    <div class="ai-avatar bot">🤖</div>
+    <div class="ai-bubble"><div class="ai-typing"><div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div></div></div>
+  </div>`;
+  chatEl.scrollTop=chatEl.scrollHeight;
+
+  // Update status
+  setAIStatus('thinking');
+
+  const apiKey=STATE.apiKey||(document.getElementById('cfg-api-key')?.value)||'';
+
+  if(!apiKey || !apiKey.startsWith('sk-ant')){
+    // Demo mode
+    await new Promise(r=>setTimeout(r,1200));
+    document.getElementById(typingId)?.remove();
+    const demoResp=getDemoResponse(msg);
+    appendChatMsg('bot', demoResp);
+    setAIStatus('idle');
+    document.getElementById('ai-send-btn').disabled=false;
+    return;
+  }
+
+  // Real API call
+  AI_CHAT_HISTORY.push({role:'user',content:msg});
+  try{
+    // Montar mensagens para Gemini (converte formato)
+    const systemCtx=getAIContext()+(window._aiExtraContext?'\n\nCONTEÚDO DO DOCUMENTO ANEXADO:\n'+window._aiExtraContext:'');
+    const geminiMsgs=AI_CHAT_HISTORY.map(m=>({role:m.role==='assistant'?'model':'user',parts:[{text:m.content}]}));
+    // Injetar contexto no primeiro user message
+    if(geminiMsgs.length>0 && geminiMsgs[0].role==='user'){
+      geminiMsgs[0].parts[0].text=systemCtx+'\n\n'+geminiMsgs[0].parts[0].text;
+    }
+    const res=await fetch(WORKER_URL,{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({contents:geminiMsgs})
+    });
+    const data=await res.json();
+    document.getElementById(typingId)?.remove();
+    if(data.candidates?.[0]?.content?.parts?.[0]){
+      const reply=data.candidates[0].content.parts[0].text;
+      AI_CHAT_HISTORY.push({role:'assistant',content:reply});
+      appendChatMsg('bot', reply);
+      setAIStatus('ok');
+      // Save chat
+      try{localStorage.setItem('licitax_chat',JSON.stringify(AI_CHAT_HISTORY.slice(-20)));}catch(e){}
+    } else {
+      appendChatMsg('bot','❌ Erro: '+(data.error?.message||JSON.stringify(data)));
+      setAIStatus('error');
+    }
+  }catch(err){
+    document.getElementById(typingId)?.remove();
+    appendChatMsg('bot','❌ Erro de conexão. Verifique sua chave API em ⚙️ Configurações.');
+    setAIStatus('error');
+  }
+  document.getElementById('ai-send-btn').disabled=false;
+}
+
+function appendChatMsg(role, text){
+  const chatEl=document.getElementById('ai-chat-messages');
+  const avatar=role==='user'?'👤':'🤖';
+  const formattedText=text
+    .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')
+    .replace(/^- (.+)$/gm,'<li>$1</li>')
+    .replace(/(<li>.*<\/li>)/s,'<ul>$1</ul>')
+    .replace(/\n\n/g,'<br><br>')
+    .replace(/\n/g,'<br>');
+  chatEl.innerHTML+=`<div class="ai-msg ${role}">
+    <div class="ai-avatar ${role}">${avatar}</div>
+    <div class="ai-bubble">${formattedText}</div>
+  </div>`;
+  chatEl.scrollTop=chatEl.scrollHeight;
+}
+
+function setAIStatus(s){
+  const dot=document.getElementById('ai-status-dot');
+  const txt=document.getElementById('ai-status-text');
+  if(!dot||!txt) return;
+  if(s==='thinking'){dot.className='api-status-dot';dot.style.background='var(--amb)';txt.textContent='Pensando…';}
+  else if(s==='ok'){dot.className='api-status-dot ok';txt.textContent='Conectado';}
+  else if(s==='error'){dot.className='api-status-dot err';txt.textContent='Erro';}
+  else{dot.className='api-status-dot idle';dot.style.background='var(--txt3)';txt.textContent='Aguardando';}
+}
+
+function clearAIChat(){
+  AI_CHAT_HISTORY.length=0;
+  const chatEl=document.getElementById('ai-chat-messages');
+  chatEl.innerHTML=`<div class="ai-msg bot">
+    <div class="ai-avatar bot">🤖</div>
+    <div class="ai-bubble"><strong>Conversa reiniciada.</strong> Como posso ajudar?</div>
+  </div>`;
+  try{localStorage.removeItem('licitax_chat');}catch(e){}
+  notify('Conversa limpa!','info');
+}
+
+function loadAIFileContext(input){
+  const file=input.files[0];
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    window._aiExtraContext=e.target.result.slice(0,8000);
+    document.getElementById('ai-context-label').textContent=`📄 Contexto: ${file.name} (${(file.size/1024).toFixed(0)} KB carregado)`;
+    document.getElementById('ai-upload-context').style.display='flex';
+    notify(`📎 Arquivo "${file.name}" carregado como contexto!`,'success');
+  };
+  reader.readAsText(file);
+}
+
+function clearAIContext(){ window._aiExtraContext=null; document.getElementById('ai-upload-context').style.display='none'; }
+
+function getDemoResponse(msg){
+  const lower=msg.toLowerCase();
+  if(lower.includes('apto')||lower.includes('aptid')||lower.includes('particip'))
+    return '**Análise de Aptidão (Modo Demo)**\n\n⚠️ Configure sua chave API Claude em ⚙️ Configurações para análise real.\n\n**Verificação rápida simulada:**\n- ✅ Documentação jurídica: Contrato Social ✓\n- ⚠️ CND Federal: **VENCIDA** — renovar urgente\n- ✅ FGTS: Certidão válida\n- ✅ TST: Certidão válida\n\n**Conclusão simulada:** Empresa em situação de **RESTRIÇÃO** por conta da CND Federal vencida. Regularize antes da abertura.';
+  if(lower.includes('doc')||lower.includes('vencid')||lower.includes('certid'))
+    return '**Documentos com Atenção (Modo Demo)**\n\n- 🔴 **CND Federal** (TechClean): Venceu em 10/03/2026 — Renovar imediatamente no site da Receita Federal\n- 🟡 **Certidão FGTS** vence em 20/08/2026 — Ainda válida\n\n**Ação recomendada:** Emita nova CND Federal em [certidoes.receita.hacienda.fazenda.gov.br]\n\n*Configure sua API key para análise inteligente em tempo real.*';
+  if(lower.includes('bdi')||lower.includes('precif')||lower.includes('preço')||lower.includes('preco'))
+    return '**Cálculo de BDI para Serviços Contínuos**\n\nBDI típico para serviços de limpeza: **22% a 28%**\n\nComponentes principais:\n- **Administração Central:** 4–5%\n- **Lucro:** 7,2% (referência TCU)\n- **Impostos (PIS/COFINS/ISS):** 3–5,5%\n- **Garantias:** 0,5–1%\n- **Imprevistos:** 1–2%\n\nFórmula: `BDI = [(1+AC)(1+L)(1+I)/(1-G)] - 1`\n\n*Para cálculo personalizado com sua estrutura de custos, configure a API Claude.*';
+  return '**Assistente IA (Modo Demo)**\n\nPara respostas completas e inteligentes com acesso aos seus dados reais, configure sua **Chave API Gemini (Google)** em ⚙️ Configurações.\n\nEnquanto isso, posso ajudar com informações gerais sobre:\n- Lei 14.133/2021 (Nova Lei de Licitações)\n- Documentação de habilitação\n- Estratégias de proposta\n- Modalidades de licitação\n\nFaça uma pergunta específica!';
+}
+
+// ─────────────────── DASHBOARD SEARCH ───────────────────
+function dashSearch(q){
+  if(!q){ renderDashboard(); return; }
+  const low=q.toLowerCase();
+  const tbody=document.getElementById('dash-editais-tbody');
+  if(!tbody) return;
+  const filtered=STATE.editais.filter(e=>
+    e.orgao.toLowerCase().includes(low)||
+    e.numero.includes(low)||
+    e.modalidade.toLowerCase().includes(low)||
+    (e.objeto||'').toLowerCase().includes(low)||
+    (getEmpresa(e.empresaId)?.fantasia||'').toLowerCase().includes(low)
+  ).slice(0,5).reverse();
+  if(!filtered.length){
+    tbody.innerHTML='<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--txt3)">Nenhum resultado para "'+q+'"</td></tr>';
+    return;
+  }
+  tbody.innerHTML=filtered.map(e=>{
+    return `<tr class="clickable" onclick="viewEdital(${e.id})">
+      <td><div style="font-weight:500;font-size:13px">${e.orgao}</div><div style="font-size:11.5px;color:var(--txt3)">${e.modalidade} nº ${e.numero}</div></td>
+      <td><span class="modality">${e.modalidade.split(' ')[0]}</span></td>
+      <td style="font-size:12.5px">${fmtDate(e.abertura)}</td>
+      <td>${statusBadge(e.status)}</td>
+      <td>${aptidaoBadge(e.aptidao)}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ─────────────────── DECLARAÇÕES PDF ───────────────────
+function gerarDeclaracao(tipo){
+  if(typeof window.jspdf==='undefined'){ notify('Aguarde… carregando biblioteca PDF.','info'); return; }
+  const empresaId=parseInt(document.getElementById('prop-empresa-sel')?.value||STATE.empresas[0]?.id);
+  const editalId=parseInt(document.getElementById('proposta-edital-select')?.value);
+  const emp=getEmpresa(empresaId);
+  const e=editalId?getEdital(editalId):STATE.editais.find(ed=>ed.status==='analyzed'&&ed.empresaId===empresaId);
+  if(!emp){ notify('Selecione uma empresa primeiro.','error'); return; }
+
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'p',unit:'mm',format:'a4'});
+  const W=210; const M=25;
+  const hoje=new Date().toLocaleDateString('pt-BR');
+  const resp=document.getElementById('prop-responsavel')?.value||document.getElementById('cfg-prop-resp')?.value||'Responsável';
+  const cargo=document.getElementById('prop-cargo')?.value||document.getElementById('cfg-prop-cargo')?.value||'Cargo';
+
+  const editalInfo=e?`${e.modalidade} nº ${e.numero} – ${e.orgao}`:'(Edital não selecionado)';
+
+  // Cabeçalho padrão
+  function cabecalho(titulo){
+    if(emp.logoData){
+      try{ doc.addImage(emp.logoData,'PNG',M,10,22,22); }catch(ex){}
+      doc.setFont('helvetica','bold'); doc.setFontSize(14); doc.setTextColor(30,41,59);
+      doc.text(emp.razao, M+26, 18);
+      doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(100,116,139);
+      doc.text(`CNPJ: ${emp.cnpj}  |  ${emp.endereco||''}`, M+26, 24);
+    } else {
+      doc.setFont('helvetica','bold'); doc.setFontSize(14); doc.setTextColor(30,41,59);
+      doc.text(emp.razao, M, 18);
+      doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(100,116,139);
+      doc.text(`CNPJ: ${emp.cnpj}  |  ${emp.endereco||''}`, M, 24);
+    }
+    doc.setDrawColor(30,58,138); doc.setLineWidth(0.6);
+    doc.line(M, 32, W-M, 32);
+    doc.setFont('helvetica','bold'); doc.setFontSize(13); doc.setTextColor(30,58,138);
+    doc.text(titulo, W/2, 42, {align:'center'});
+    doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(100,116,139);
+    doc.text(editalInfo, W/2, 49, {align:'center', maxWidth: W-M*2});
+    doc.setDrawColor(200,210,220); doc.setLineWidth(0.3);
+    doc.line(M, 54, W-M, 54);
+  }
+
+  function rodape(){
+    const pages=doc.internal.getNumberOfPages();
+    for(let i=1;i<=pages;i++){
+      doc.setPage(i);
+      doc.setFontSize(7.5); doc.setTextColor(180,190,200);
+      doc.text(`${emp.razao} · CNPJ ${emp.cnpj}`, M, 288);
+      doc.text(`Pág. ${i}/${pages} · Gerado em ${hoje} pelo LicitaX`, W-M, 288, {align:'right'});
+    }
+  }
+
+  function textoJustificado(doc, texto, x, y, maxWidth, lineHeight=5.5){
+    const lines=doc.splitTextToSize(texto, maxWidth);
+    lines.forEach(line=>{ doc.text(line, x, y); y+=lineHeight; });
+    return y;
+  }
+
+  const textStyles = ()=>{ doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(30,41,59); };
+  const bold = ()=>{ doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(30,41,59); };
+
+  if(tipo==='mepp'){
+    cabecalho('DECLARAÇÃO — MICROEMPRESA OU EMPRESA DE PEQUENO PORTE');
+    textStyles(); let y=64;
+    const texto=`${emp.razao}, inscrita no CNPJ/MF sob o nº ${emp.cnpj}, com sede em ${emp.endereco||'endereço a confirmar'}, neste ato representada por ${resp}, ${cargo}, DECLARA, sob as penas da lei, para fins de participação no ${editalInfo}, que se enquadra na condição de MICROEMPRESA ou EMPRESA DE PEQUENO PORTE, nos termos da Lei Complementar nº 123, de 14 de dezembro de 2006, e suas alterações, e que não se encontra sujeita às vedações estabelecidas no § 4º do artigo 3º da referida Lei Complementar.\n\nDeclara ainda estar ciente de que a falsidade desta declaração, além das sanções administrativas previstas no Edital e no contrato, poderá implicar responsabilidade civil e criminal.`;
+    const lines=doc.splitTextToSize(texto, W-M*2);
+    lines.forEach(l=>{ doc.text(l, M, y); y+=5.5; });
+    y+=10;
+    doc.text(`${emp.municipio||'Local'}, ${hoje}.`, M, y); y+=20;
+    doc.setDrawColor(150,160,170); doc.line(M, y, M+80, y); y+=5;
+    bold(); doc.text(resp, M+40, y, {align:'center'}); y+=5;
+    textStyles(); doc.text(cargo, M+40, y, {align:'center'}); y+=4;
+    doc.text(`${emp.razao}`, M+40, y, {align:'center'});
+    rodape();
+    doc.save(`Declaracao_MEPP_${emp.fantasia||emp.razao}.pdf`);
+    notify('✅ Declaração ME/EPP gerada!','success');
+
+  } else if(tipo==='idoneidade'){
+    cabecalho('DECLARAÇÃO DE IDONEIDADE E INEXISTÊNCIA DE IMPEDIMENTO');
+    textStyles(); let y=64;
+    const texto=`${emp.razao}, inscrita no CNPJ/MF sob o nº ${emp.cnpj}, com sede em ${emp.endereco||'endereço a confirmar'}, por intermédio de seu representante legal, o(a) Sr.(a) ${resp}, ${cargo}, DECLARA, sob as penas da lei:\n\na) Que não foi declarada inidônea para licitar ou contratar com a Administração Pública Federal, Estadual, Municipal e do Distrito Federal;\n\nb) Que não está suspensa temporariamente de participar em licitação e impedida de contratar com a Administração Pública;\n\nc) Que não incorre nas vedações previstas no art. 14 da Lei Federal nº 14.133/2021;\n\nd) Que não possui, em seu quadro societário, servidor público ou agente político de órgão ou entidade contratante ou responsável pela licitação;\n\ne) Que inexiste fato superveniente impeditivo de sua participação no presente certame.`;
+    const lines=doc.splitTextToSize(texto, W-M*2);
+    lines.forEach(l=>{ doc.text(l, M, y); y+=5.5; });
+    y+=10;
+    doc.text(`${emp.municipio||'Local'}, ${hoje}.`, M, y); y+=20;
+    doc.setDrawColor(150,160,170); doc.line(M, y, M+80, y); y+=5;
+    bold(); doc.text(resp, M+40, y, {align:'center'}); y+=5;
+    textStyles(); doc.text(cargo, M+40, y, {align:'center'});
+    rodape();
+    doc.save(`Declaracao_Idoneidade_${emp.fantasia||emp.razao}.pdf`);
+    notify('✅ Declaração de Idoneidade gerada!','success');
+
+  } else if(tipo==='unificada'){
+    cabecalho('DECLARAÇÕES UNIFICADAS');
+    textStyles(); let y=62;
+    const intro=`${emp.razao}, CNPJ nº ${emp.cnpj}, por seu representante ${resp}, ${cargo}, DECLARA para todos os fins de direito, especialmente para participação no ${editalInfo}:`;
+    const introLines=doc.splitTextToSize(intro, W-M*2);
+    introLines.forEach(l=>{ doc.text(l,M,y); y+=5.5; }); y+=4;
+
+    const declaracoes=[
+      ['I — HABILITAÇÃO JURÍDICA','Que possui plena capacidade jurídica para participar da presente licitação, encontrando-se regularmente constituída, com todos os atos societários arquivados no órgão competente.'],
+      ['II — REGULARIDADE FISCAL E TRABALHISTA','Que está em situação regular perante as Fazendas Federal, Estadual e Municipal, bem como junto ao INSS, FGTS e Tribunal Superior do Trabalho (TST), conforme certidões disponíveis no repositório de documentos.'],
+      ['III — QUALIFICAÇÃO ECONÔMICO-FINANCEIRA','Que possui capacidade econômico-financeira compatível com o objeto licitado, nos termos exigidos pelo Edital.'],
+      ['IV — INEXISTÊNCIA DE FATOS IMPEDITIVOS','Que não há fato superveniente impeditivo de sua habilitação, comprometendo-se a comunicar qualquer alteração ocorrida durante o processo licitatório.'],
+      ['V — TRABALHO DE MENORES','Que não emprega menor de 18 (dezoito) anos em trabalho noturno, perigoso ou insalubre, e não emprega menor de 16 (dezesseis) anos, salvo na condição de aprendiz, a partir dos 14 (quatorze) anos, nos termos do inciso XXXIII do art. 7º da Constituição Federal.'],
+      ['VI — VERACIDADE DAS INFORMAÇÕES','Que as informações e documentos apresentados são verídicos e estão atualizados, assumindo integral responsabilidade pela sua autenticidade.'],
+    ];
+
+    declaracoes.forEach(([titulo, texto])=>{
+      if(y>250){ doc.addPage(); y=20; }
+      bold(); doc.text(titulo, M, y); y+=6;
+      textStyles();
+      const lines=doc.splitTextToSize(texto, W-M*2);
+      lines.forEach(l=>{ doc.text(l,M,y); y+=5.2; });
+      y+=4;
+    });
+
+    if(y>260){ doc.addPage(); y=20; }
+    y+=6;
+    doc.text(`${emp.municipio||'Local'}, ${hoje}.`, M, y); y+=20;
+    doc.setDrawColor(150,160,170); doc.line(M, y, M+80, y); y+=5;
+    bold(); doc.text(resp, M+40, y, {align:'center'}); y+=5;
+    textStyles(); doc.text(cargo, M+40, y, {align:'center'});
+    rodape();
+    doc.save(`Declaracoes_Unificadas_${emp.fantasia||emp.razao}.pdf`);
+    notify('✅ Declarações Unificadas geradas!','success');
+  }
+}
+
+// ─────────────────── EXPORTAR EXCEL DA PROPOSTA ───────────────────
+function exportarPropostaExcel(){
+  const empresaId=parseInt(document.getElementById('prop-empresa-sel')?.value||STATE.empresas[0]?.id);
+  const editalId=parseInt(document.getElementById('proposta-edital-select')?.value);
+  const emp=getEmpresa(empresaId);
+  const e=editalId?getEdital(editalId):STATE.editais.find(ed=>ed.status==='analyzed'&&ed.empresaId===empresaId);
+  if(!emp||!e||!e.items?.length){ notify('Selecione um edital com itens cadastrados.','error'); return; }
+
+  // Gera CSV (funciona sem biblioteca externa)
+  const hoje=new Date().toLocaleDateString('pt-BR');
+  const linhas=[
+    [`PROPOSTA COMERCIAL — ${emp.razao}`],
+    [`CNPJ: ${emp.cnpj}`],
+    [`Edital: ${e.modalidade} nº ${e.numero} — ${e.orgao}`],
+    [`Data: ${hoje}`],
+    [],
+    ['#','Descrição','Unidade','Quantidade','Valor Estimado','Minha Proposta','Total Proposto'],
+  ];
+  let totalEst=0, totalProp=0;
+  e.items.forEach(it=>{
+    const te=(it.estimado||0)*it.qtd;
+    const tp=(it.proposto||0)*it.qtd;
+    totalEst+=te; totalProp+=tp;
+    linhas.push([it.n, it.desc, it.un, it.qtd,
+      (it.estimado||0).toFixed(2).replace('.',','),
+      (it.proposto||0).toFixed(2).replace('.',','),
+      tp.toFixed(2).replace('.',',')
+    ]);
+  });
+  linhas.push([]);
+  linhas.push(['','','','','TOTAL ESTIMADO','TOTAL PROPOSTA','DIFERENÇA']);
+  linhas.push(['','','','',
+    totalEst.toFixed(2).replace('.',','),
+    totalProp.toFixed(2).replace('.',','),
+    (totalProp-totalEst).toFixed(2).replace('.',',')
+  ]);
+
+  // BOM para Excel reconhecer UTF-8
+  const csv='\uFEFF'+linhas.map(r=>r.map(v=>`"${String(v||'').replace(/"/g,'""')}"`).join(';')).join('\n');
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`Proposta_${e.modalidade.replace(/ /g,'_')}_${e.numero.replace(/\//g,'-')}_${emp.fantasia||emp.razao}.csv`;
+  a.click();
+  notify('📊 Planilha exportada! Abra no Excel ou Google Sheets.','success');
+}
+
+// ─────────────────── PDF DA PROPOSTA ───────────────────
+// ─────────────────── DIALOG PAPEL TIMBRADO ───────────────────
+function mostrarDialogTimbrado(emp){
+  return new Promise(resolve=>{
+    // Remove dialog anterior se existir
+    document.getElementById('dialog-timbrado')?.remove();
+
+    const d=document.createElement('div');
+    d.id='dialog-timbrado';
+    d.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:9999;display:flex;align-items:center;justify-content:center';
+    d.innerHTML=`
+      <div style="background:var(--surf);border:1px solid var(--bord2);border-radius:16px;padding:28px;max-width:420px;width:90%;box-shadow:0 24px 64px rgba(0,0,0,.5)">
+        <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700;margin-bottom:6px">📄 Formato do documento</div>
+        <div style="font-size:13px;color:var(--txt2);margin-bottom:20px">Como você quer gerar a proposta para <strong style="color:var(--txt)">${emp.fantasia||emp.razao}</strong>?</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <button id="btn-usar-timbrado" style="background:var(--surf2);border:1px solid var(--bord2);border-radius:10px;padding:14px 16px;cursor:pointer;text-align:left;transition:border-color .15s;width:100%">
+            <div style="font-size:13.5px;font-weight:600;color:var(--txt);margin-bottom:3px">🗂️ No papel timbrado da empresa</div>
+            <div style="font-size:12px;color:var(--txt3)">Usa a imagem do papel timbrado cadastrado como fundo</div>
+          </button>
+          <button id="btn-usar-padrao" style="background:var(--surf2);border:1px solid var(--bord2);border-radius:10px;padding:14px 16px;cursor:pointer;text-align:left;transition:border-color .15s;width:100%">
+            <div style="font-size:13.5px;font-weight:600;color:var(--txt);margin-bottom:3px">🎨 No modelo padrão do LicitaX</div>
+            <div style="font-size:12px;color:var(--txt3)">Header azul com logo e dados da empresa gerados automaticamente</div>
+          </button>
+          <button id="btn-cancelar-timbrado" style="background:none;border:none;color:var(--txt3);cursor:pointer;font-size:13px;padding:6px;margin-top:4px">Cancelar</button>
+        </div>
+      </div>`;
+
+    document.body.appendChild(d);
+
+    d.querySelector('#btn-usar-timbrado').onclick=()=>{d.remove();resolve(true);};
+    d.querySelector('#btn-usar-padrao').onclick=()=>{d.remove();resolve(false);};
+    d.querySelector('#btn-cancelar-timbrado').onclick=()=>{d.remove();resolve(null);};
+
+    // Hover nos botões
+    ['btn-usar-timbrado','btn-usar-padrao'].forEach(id=>{
+      const btn=d.querySelector('#'+id);
+      btn.onmouseenter=()=>btn.style.borderColor='var(--acc)';
+      btn.onmouseleave=()=>btn.style.borderColor='var(--bord2)';
+    });
+  });
+}
+
+async function downloadPropostaPDF(){
+  const empresaId=parseInt(document.getElementById('prop-empresa-sel')?.value||STATE.empresas[0]?.id);
+  const editalId=parseInt(document.getElementById('proposta-edital-select')?.value);
+  const emp=getEmpresa(empresaId);
+  const e=editalId?getEdital(editalId):STATE.editais.find(ed=>ed.status==='analyzed'&&ed.empresaId===empresaId);
+
+  if(!emp||!e){notify('Selecione uma empresa e um edital analisado para gerar o PDF.','error');return;}
+  if(typeof window.jspdf==='undefined'){notify('Aguarde… carregando biblioteca PDF.','info');return;}
+
+  // Perguntar sobre papel timbrado se empresa tiver um cadastrado
+  let usarTimbrado = false;
+  if(emp.timbradoData){
+    usarTimbrado = await mostrarDialogTimbrado(emp);
+    if(usarTimbrado === null) return; // cancelou
+  }
+
+  const cfg=JSON.parse(localStorage.getItem('licitax_config')||'{}');
+  const resp=cfg.propResp||document.getElementById('cfg-prop-resp')?.value||'Responsável';
+  const cargo=cfg.propCargo||document.getElementById('cfg-prop-cargo')?.value||'Diretor';
+  const validadeDias=parseInt(cfg.propValidade||'30');
+  const hoje=new Date();
+  const validadeDate=new Date(hoje); validadeDate.setDate(hoje.getDate()+validadeDias);
+  const fmtD=d=>d.toLocaleDateString('pt-BR');
+
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'p',unit:'mm',format:'a4'});
+  const W=210; const M=18;
+  let yStart=66; // y inicial do conteúdo
+
+  if(usarTimbrado && emp.timbradoData){
+    // ── Papel Timbrado ──
+    if(emp.timbradoType&&emp.timbradoType.startsWith('image')){
+      // Imagem como fundo da primeira página
+      doc.addImage(emp.timbradoData, emp.timbradoType.includes('png')?'PNG':'JPEG', 0, 0, W, 297);
+    }
+    // Título Proposta sobre o timbrado
+    doc.setFillColor(255,255,255);
+    doc.setDrawColor(30,58,138);
+    doc.setLineWidth(0.5);
+    doc.roundedRect(M,14,W-M*2,18,3,3,'FD');
+    doc.setTextColor(30,58,138);
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(13);
+    doc.text('PROPOSTA COMERCIAL',W/2,25,{align:'center'});
+    doc.setFontSize(8.5);
+    doc.setFont('helvetica','normal');
+    doc.setTextColor(100,116,139);
+    doc.text(`${e.modalidade} nº ${e.numero} · ${e.orgao}`,W/2,31,{align:'center'});
+    yStart=40;
+  } else {
+    // ── Header azul padrão ──
+    doc.setFillColor(30,58,138);
+    doc.rect(0,0,W,38,'F');
+    // Logo se tiver
+    if(emp.logoData && emp.timbradoType && emp.timbradoType.startsWith('image')){
+      try{ doc.addImage(emp.logoData,'PNG',M,4,28,28); }catch(ex){}
+      doc.setTextColor(255,255,255);
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(16);
+      doc.text(emp.fantasia||emp.razao,M+32,14);
+    } else {
+      doc.setTextColor(255,255,255);
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(18);
+      doc.text(emp.fantasia||emp.razao,M,16);
+    }
+    doc.setFontSize(8.5);
+    doc.setFont('helvetica','normal');
+    doc.setTextColor(255,255,255);
+    doc.text(`CNPJ: ${emp.cnpj}`,M,22);
+    doc.text(emp.endereco||'',M,27);
+    doc.text(`${emp.telefone||''} · ${emp.email||''}`,M,32);
+
+    // ── Título Proposta ──
+    doc.setFillColor(248,250,252);
+    doc.rect(0,38,W,16,'F');
+    doc.setTextColor(30,58,138);
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(13);
+    doc.text('PROPOSTA COMERCIAL',W/2,48,{align:'center'});
+    doc.setFontSize(8.5);
+    doc.setFont('helvetica','normal');
+    doc.setTextColor(100,116,139);
+    doc.text(`${e.modalidade} nº ${e.numero} · ${e.orgao}`,W/2,54,{align:'center'});
+    yStart=66;
+  }
+
+  // ── Dados do Edital ──
+  doc.setTextColor(30,41,59);
+  let y=yStart;
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(9);
+  doc.text('DADOS DO PROCESSO LICITATÓRIO',M,y);
+  y+=5;
+  doc.setDrawColor(229,231,235);
+  doc.setLineWidth(0.3);
+  doc.line(M,y,W-M,y);
+  y+=5;
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(8.5);
+  const rows2=[['Órgão Licitante:',e.orgao],['Modalidade:',e.modalidade+' nº '+e.numero],['Processo:',e.processo||'—'],['Objeto:',e.objeto||'—'],['Data de Abertura:',fmtDate(e.abertura)]];
+  rows2.forEach(([l,v])=>{
+    doc.setFont('helvetica','bold'); doc.text(l,M,y);
+    doc.setFont('helvetica','normal'); doc.text(v,M+38,y,{maxWidth:W-M-38-M});
+    y+= v.length>80?12:6;
+  });
+
+  // ── Texto introdutório ──
+  y+=4;
+  doc.setFont('helvetica','bold'); doc.setFontSize(9);
+  doc.text('PROPOSTA',M,y); y+=5;
+  doc.line(M,y,W-M,y); y+=5;
+  doc.setFont('helvetica','normal'); doc.setFontSize(8.5);
+  const intro=`A empresa ${emp.razao}, inscrita no CNPJ sob o nº ${emp.cnpj}, vem pelo presente instrumento apresentar sua Proposta Comercial para o objeto do ${e.modalidade} nº ${e.numero}, promovido por ${e.orgao}, declarando ter pleno conhecimento do Edital e seus anexos.`;
+  const introLines=doc.splitTextToSize(intro,W-M*2);
+  doc.text(introLines,M,y); y+=introLines.length*4.5+6;
+
+  // ── Tabela de Itens ──
+  if(e.items&&e.items.length>0){
+    doc.setFont('helvetica','bold'); doc.setFontSize(9);
+    doc.text('PLANILHA DE ITENS E PREÇOS',M,y); y+=5;
+
+    const tableBody=e.items.map(it=>[
+      String(it.n).padStart(2,'0'),
+      it.desc,
+      it.un,
+      String(it.qtd),
+      fmtMoeda(it.estimado),
+      fmtMoeda(it.proposto||0),
+      fmtMoeda((it.proposto||0)*it.qtd)
+    ]);
+    const total=e.items.reduce((s,it)=>s+(it.proposto||0)*it.qtd,0);
+    tableBody.push(['','','','','','TOTAL GERAL',fmtMoeda(total)]);
+
+    doc.autoTable({
+      startY:y,
+      head:[['#','Descrição','Un.','Qtd.','Estimado','Minha Proposta','Total']],
+      body:tableBody,
+      margin:{left:M,right:M},
+      styles:{fontSize:8,cellPadding:2.5,textColor:[30,41,59]},
+      headStyles:{fillColor:[30,58,138],textColor:255,fontStyle:'bold'},
+      alternateRowStyles:{fillColor:[248,250,252]},
+      foot:[],
+      didParseCell:(d)=>{if(d.row.index===tableBody.length-1){d.cell.styles.fontStyle='bold';d.cell.styles.fillColor=[240,253,244];d.cell.styles.textColor=[5,150,105];}}
+    });
+    y=doc.lastAutoTable.finalY+8;
+  }
+
+  // ── Validade e assinatura ──
+  if(y>240){doc.addPage();y=20;}
+  doc.setFont('helvetica','normal'); doc.setFontSize(8.5);
+  doc.text(`Validade da proposta: ${validadeDias} dias (até ${fmtD(validadeDate)})`,M,y); y+=5;
+  doc.text(`Prazo de início: ${cfg.propPrazo||'10 dias úteis após a Ordem de Serviço'}`,M,y); y+=14;
+
+  // Assinaturas
+  const colW=(W-M*2-20)/2;
+  doc.line(M,y,M+colW,y);
+  doc.line(M+colW+20,y,W-M,y);
+  y+=4;
+  doc.setFont('helvetica','bold'); doc.text(resp,M+colW/2,y,{align:'center'});
+  doc.text(emp.fantasia||emp.razao,M+colW+20+colW/2,y,{align:'center'});
+  y+=4;
+  doc.setFont('helvetica','normal'); doc.text(cargo,M+colW/2,y,{align:'center'});
+  doc.text(fmtD(hoje),M+colW+20+colW/2,y,{align:'center'});
+
+  // ── Footer ──
+  const pageCount=doc.internal.getNumberOfPages();
+  for(let i=1;i<=pageCount;i++){
+    doc.setPage(i);
+    doc.setFillColor(248,250,252);
+    doc.rect(0,285,W,12,'F');
+    doc.setTextColor(148,163,184); doc.setFontSize(7.5);
+    doc.text(`${emp.razao} · CNPJ ${emp.cnpj}`,M,291);
+    doc.text(`Pág. ${i}/${pageCount}`,W-M,291,{align:'right'});
+  }
+
+  doc.save(`Proposta_${e.modalidade.replace(/ /g,'_')}_${e.numero.replace(/\//g,'-')}_${emp.fantasia||emp.razao}.pdf`);
+  notify('📄 PDF da proposta gerado e baixado!','success');
+}
+
+// ─────────────────── INIT ───────────────────
+loadState();
+renderDashboard();
+// Load config after DOM ready
+setTimeout(()=>{loadConfig();updateStorageInfo();},100);
+
+// Auto-save on any state change — wrap key mutations
+const _origSaveEdital=saveEdital;
+const _origSaveEmpresa=saveEmpresa;
+
+// Patch showPage to also handle new pages
+const _origShowPage=showPage;
+window.showPage=function(id){
+  _origShowPage(id);
+  if(id==='configuracoes'){setTimeout(()=>{loadConfig();updateStorageInfo();},50);}
+};
+
+// Override save functions to also persist
+window.saveEdital=function(){
+  _origSaveEdital();
+  saveState();
+};
+window.saveEmpresa=function(){
+  _origSaveEmpresa();
+  saveState();
+};
+</script>
+</body>
+</html>
