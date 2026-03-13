@@ -5,7 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>LicitaX — Automação de Licitações</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script>if(window["pdfjs-dist/build/pdf"])window["pdfjs-dist/build/pdf"].GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";</script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <style>
 :root{--bg:#0a0c10;--surf:#111318;--surf2:#181c24;--bord:#1e2330;--bord2:#252b3b;--acc:#2563eb;--acc2:#3b82f6;--glow:rgba(37,99,235,.3);--grn:#10b981;--grn2:rgba(16,185,129,.12);--red:#ef4444;--red2:rgba(239,68,68,.12);--amb:#f59e0b;--amb2:rgba(245,158,11,.12);--txt:#e8eaf0;--txt2:#8892a4;--txt3:#4a5568;--r:10px;--rl:16px}
@@ -1360,16 +1362,40 @@ function processUploadedFile(file){
     stepsEl.innerHTML='<div style="color:var(--acc2);font-size:13px">🔍 IA analisando o documento…</div>';
 
     try{
-      const prompt='Leia este edital de licitação pública brasileira e extraia TODAS as informações. Retorne APENAS JSON puro, sem texto, sem markdown. Estrutura: {"orgao":"","numero":"","processo":"","modalidade":"","abertura":"YYYY-MM-DD ou null","encerramento":"YYYY-MM-DD ou null","objeto":"","local":"","requisitos":["doc1"],"items":[{"n":1,"desc":"","un":"","qtd":0,"estimado":0}],"alertas":[{"tipo":"high","msg":""}]}';
+      // Extrair texto do PDF no navegador
+      let textoEdital = '';
+      if(isPDF){
+        stepsEl.innerHTML='<div style="color:var(--acc2);font-size:13px">📄 Extraindo texto do PDF…</div>';
+        try{
+          const pdfjsLib = window['pdfjs-dist/build/pdf'];
+          if(pdfjsLib){
+            const pdfData = atob(base64);
+            const arr = new Uint8Array(pdfData.length);
+            for(let i=0;i<pdfData.length;i++) arr[i]=pdfData.charCodeAt(i);
+            const pdf = await pdfjsLib.getDocument({data:arr}).promise;
+            const maxPages = Math.min(pdf.numPages, 15);
+            for(let p=1;p<=maxPages;p++){
+              const page = await pdf.getPage(p);
+              const tc = await page.getTextContent();
+              textoEdital += tc.items.map(i=>i.str).join(' ') + '\n';
+            }
+          }
+        }catch(e){ console.warn('PDF.js falhou, usando base64 texto:', e); }
+        if(!textoEdital) textoEdital = atob(base64).replace(/[^\x20-\x7E\xA0-\xFF\n]/g,' ').slice(0,12000);
+      } else {
+        textoEdital = atob(base64).slice(0,12000);
+      }
 
-      const parts=isPDF
-        ? [{text:prompt},{inline_data:{mime_type:'application/pdf',data:base64}}]
-        : [{text:prompt+'\n\nCONTEÚDO:\n'+atob(base64).slice(0,12000)}];
+      textoEdital = textoEdital.slice(0, 12000);
+      stepsEl.innerHTML='<div style="color:var(--acc2);font-size:13px">🤖 IA analisando o edital…</div>';
 
-      const res=await fetch(
-        WORKER_URL,
-        {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts}]})}
-      );
+      const prompt = 'Você é um especialista em licitações públicas brasileiras. Leia o edital abaixo e extraia as informações. Retorne APENAS JSON puro, sem markdown, sem explicações.\nEstrutura obrigatória:\n{"orgao":"","numero":"","processo":"","modalidade":"","abertura":"YYYY-MM-DD ou null","encerramento":"YYYY-MM-DD ou null","objeto":"","local":"","requisitos":["doc1","doc2"],"items":[{"n":1,"desc":"","un":"","qtd":0,"estimado":0}],"alertas":[{"tipo":"high","msg":""}]}\n\nEDITAL:\n'+textoEdital;
+
+      const res=await fetch(WORKER_URL,{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({messages:[{role:'user',content:prompt}]})
+      });
 
       const data=await res.json();
 
@@ -1379,11 +1405,7 @@ function processUploadedFile(file){
         return;
       }
 
-      const rawText=data.candidates?.[0]?.content?.parts?.[0]?.text||'';
-      if(!rawText){
-        stepsEl.innerHTML='<div style="color:var(--red);font-size:13px">❌ API não retornou texto.</div>';
-        return;
-      }
+      const rawText=data.choices?.[0]?.message?.content||'';
       if(!rawText){
         stepsEl.innerHTML='<div style="color:var(--red);font-size:13px">❌ API não retornou texto.</div>';
         return;
@@ -2547,19 +2569,15 @@ async function sendAIMessage(){
   try{
     // Montar mensagens para Gemini (converte formato)
     const systemCtx=getAIContext()+(window._aiExtraContext?'\n\nCONTEÚDO DO DOCUMENTO ANEXADO:\n'+window._aiExtraContext:'');
-    const geminiMsgs=AI_CHAT_HISTORY.map(m=>({role:m.role==='assistant'?'model':'user',parts:[{text:m.content}]}));
-    // Injetar contexto no primeiro user message
-    if(geminiMsgs.length>0 && geminiMsgs[0].role==='user'){
-      geminiMsgs[0].parts[0].text=systemCtx+'\n\n'+geminiMsgs[0].parts[0].text;
-    }
+    const groqMsgs=[{role:'system',content:systemCtx},...AI_CHAT_HISTORY.map(m=>({role:m.role,content:m.content}))];
     const res=await fetch(WORKER_URL,{
       method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({contents:geminiMsgs})
+      body:JSON.stringify({messages:groqMsgs})
     });
     const data=await res.json();
     document.getElementById(typingId)?.remove();
-    if(data.candidates?.[0]?.content?.parts?.[0]){
-      const reply=data.candidates[0].content.parts[0].text;
+    if(data.choices?.[0]?.message?.content){
+      const reply=data.choices[0].message.content;
       AI_CHAT_HISTORY.push({role:'assistant',content:reply});
       appendChatMsg('bot', reply);
       setAIStatus('ok');
