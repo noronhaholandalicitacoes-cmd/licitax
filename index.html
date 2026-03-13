@@ -2425,30 +2425,26 @@ function onApiKeyChange(){
 }
 
 async function testApiKey(){
-  const key=document.getElementById('cfg-api-key').value.trim();
-  if(!key){notify('Cole a chave API primeiro.','error');return;}
   const btn=document.querySelector('[onclick="testApiKey()"]');
   btn.textContent='⏳ Testando…'; btn.disabled=true;
   const statusEl=document.getElementById('cfg-api-status-text');
   try{
     const res=await fetch(WORKER_URL,{
       method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({contents:[{parts:[{text:'Responda apenas: OK'}]}]})
+      body:JSON.stringify({messages:[{role:'user',content:'Responda apenas: OK'}]})
     });
     const data=await res.json();
-    if(data.candidates?.[0]?.content?.parts?.[0]?.text){
-      statusEl.textContent='✅ Conexão OK — Gemini respondendo!'; statusEl.style.color='var(--grn)';
-      STATE.apiKey=key;
-      window.LICITAX_KEY=key;
-      notify('✅ Chave Gemini válida! IA conectada.','success');
+    if(data.choices?.[0]?.message?.content){
+      statusEl.textContent='✅ IA conectada e funcionando!'; statusEl.style.color='var(--grn)';
+      notify('✅ IA conectada!','success');
       document.getElementById('cfg-api-badge').className='api-status-dot ok';
     } else {
-      statusEl.textContent='❌ '+( data.error?.message||'Erro desconhecido'); statusEl.style.color='var(--red)';
-      notify('Erro na API: '+(data.error?.message||'Verifique a chave'),'error');
+      statusEl.textContent='❌ '+(data.error?.message||'Erro desconhecido'); statusEl.style.color='var(--red)';
+      notify('Erro: '+(data.error?.message||'Verifique o Worker'),'error');
     }
   }catch(e){
-    statusEl.textContent='❌ Erro de rede — verifique a chave'; statusEl.style.color='var(--red)';
-    notify('Erro ao conectar com a API.','error');
+    statusEl.textContent='❌ Erro de rede'; statusEl.style.color='var(--red)';
+    notify('Erro ao conectar.','error');
   }
   btn.textContent='🔬 Testar conexão'; btn.disabled=false;
 }
