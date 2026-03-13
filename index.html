@@ -951,7 +951,7 @@ function showPage(id){
   if(id==='documentos') { renderDocsEmpresaSelect(); renderDocsTable(); renderAnaliseEditalSelect(); }
   if(id==='propostas') { renderPropostaEmpresaSelect(); renderPropostaEditalSelect(); renderProposal(); }
   if(id==='alertas') renderAlertas();
-  if(id==='ia-assistente') { const k=STATE.apiKey||(localStorage.getItem('licitax_config')&&JSON.parse(localStorage.getItem('licitax_config')||'{}').apiKey)||''; setAIStatus(k&&k.startsWith('sk-ant')?'ok':'idle'); }
+  if(id==='ia-assistente') { setAIStatus('ok'); }
 }
 
 document.querySelectorAll('.nav-item[data-page]').forEach(el=>{
@@ -1269,14 +1269,6 @@ function autoFillCNPJ(){
 
 // ── Edital: modal open/close ──
 function openNewEditalModal(){
-  // Precisa ter pelo menos uma empresa cadastrada
-  if(!STATE.empresas.length){
-    notify('Cadastre uma empresa primeiro antes de adicionar um edital.','error');
-    showPage('empresas');
-    setTimeout(()=>openEmpresaModal(),300);
-    return;
-  }
-
   window._ned_edit_id=null;
   window._ned_extracted=null;
 
@@ -1286,7 +1278,7 @@ function openNewEditalModal(){
   document.getElementById('ned-upload-zone').classList.remove('drag');
   document.getElementById('ned-upload-zone').style.pointerEvents='auto';
   document.getElementById('ned-ai-progress').style.display='none';
-  document.getElementById('ned-extracted').style.display='none';
+  document.getElementById('ned-extracted').style.display='block';
   document.getElementById('ned-orgao').value='';
   document.getElementById('ned-numero').value='';
   document.getElementById('ned-processo').value='';
@@ -1295,43 +1287,24 @@ function openNewEditalModal(){
   document.getElementById('ned-objeto').value='';
   document.getElementById('ned-local').value='';
 
-  // Título do modal
   const title=document.querySelector('#modal-edital .modal-title');
   if(title) title.textContent='Novo Edital';
 
-  // Botão salvar — sempre visível, permite salvar mesmo sem upload
   const saveBtn=document.getElementById('ned-save-btn');
   saveBtn.style.display='inline-flex';
   saveBtn.textContent='✅ Confirmar e Salvar';
 
-  // Popular select de empresas
   const sel=document.getElementById('ned-empresa');
-  sel.innerHTML=STATE.empresas.map(e=>`<option value="${e.id}">${e.fantasia||e.razao}</option>`).join('');
+  if(STATE.empresas.length){
+    sel.innerHTML=STATE.empresas.map(e=>`<option value="${e.id}">${e.fantasia||e.razao}</option>`).join('');
+    sel.disabled=false;
+  } else {
+    sel.innerHTML='<option value="">— Cadastre uma empresa primeiro —</option>';
+    sel.disabled=true;
+  }
 
-  // Reset file input
   const fi=document.getElementById('ned-file-input');
   if(fi) fi.value='';
-
-  // Popular campo de chave
-  const keyInput=document.getElementById('ned-key-input');
-  const keyStatus=document.getElementById('ned-key-status');
-  const savedKey=window.LICITAX_KEY||STATE.apiKey||
-    (()=>{try{return JSON.parse(localStorage.getItem('licitax_config')||'{}').apiKey||'';}catch(e){return '';}})()||
-    (()=>{try{return localStorage.getItem('licitax_apikey')||'';}catch(e){return '';}})()||
-    document.getElementById('cfg-api-key')?.value||'';
-  if(savedKey){
-    keyInput.value=savedKey;
-    keyInput.style.color='var(--grn)';
-    keyStatus.textContent='✅ pronta';
-    keyStatus.style.color='var(--grn)';
-    window.LICITAX_KEY=savedKey;
-    STATE.apiKey=savedKey;
-  } else {
-    keyInput.value='';
-    keyInput.style.color='var(--txt1)';
-    keyStatus.textContent='não salva';
-    keyStatus.style.color='var(--txt3)';
-  }
 
   openModal('modal-edital');
 }
@@ -2555,9 +2528,9 @@ async function sendAIMessage(){
   // Update status
   setAIStatus('thinking');
 
-  const apiKey=STATE.apiKey||(document.getElementById('cfg-api-key')?.value)||'';
+  const apiKey='worker'; // chave gerenciada pelo Worker
 
-  if(!apiKey || !apiKey.startsWith('sk-ant')){
+  if(!apiKey){
     // Demo mode
     await new Promise(r=>setTimeout(r,1200));
     document.getElementById(typingId)?.remove();
